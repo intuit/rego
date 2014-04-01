@@ -1,0 +1,102 @@
+<h2>Rule Ensembles go! (REgo)</h2>
+Predictive Learning plays an important role in many areas of science, finance and industry. Here are some examples of learning problems:
+
+<ul>
+<li>Predict whether a customer would be attracted to a new service offering. Recognizing such customers can reduce the cost of a campaign by reducing the number of contacts.</li>
+<li>Predict whether a web site visitor is unlikely to become a customer. The prediction allows prioritization of customer support resources.</li>
+<li>Identify the risk factors for churn, based on the content of customer support messages.</li>
+</ul>
+
+REgo is a collection of R-based scripts intended to facilitate the process of building, interpreting, and deploying state-of-art predictive learning models. REgo can:
+
+<ul>
+<li>Enable rapid experimentation</li>
+<li>Increase self-service capability</li>
+<li>Support easy model deployment into a production environment </li>
+</ul>
+
+Under the hood REgo uses <a href="http://statweb.stanford.edu/~jhf/R_RuleFit.html" >RuleFit</a>, a statistical model building program created by Prof. Jerome Friedman. RuleFit was written in Fortran but has an R interface. RuleFit implements a model building methodology known as "<a href="http://www.amazon.com/Ensemble-Methods-Data-Mining-Predictions/dp/1608452840" >ensembling</a>," where multiple simple models (base learners) are combined into one usually more accurate than the best of its components. This type of model can be described as an additive expansion of the form F(x) = a<sub>0</sub> + a<sub>1</sub>*b<sub>1</sub>(x) + a<sub>2</sub>*b<sub>2</sub>(x) + ... + a<sub>M</sub>*b<sub>M</sub>(x) where the b<sub>j</sub>(x)'s are the base-learners.
+
+<p>
+In the case of RuleFit, the b<sub>j</sub>(x) terms are conjunctive rules of the form “if x<sub>1</sub> > 22 and x<sub>2</sub> > 27 then 1 else 0” or linear functions of a single variable -- e.g., b<sub>j</sub>(x) = x<sub>j</sub>. Using base-learners of this type is attractive because they constitute easily interpretable statements about attributes x<sub>j</sub>. They also preserve the desirable characteristics of Decision Trees such as easy handling of categorical attributes, robustness to outliers in the distribution of x, etc.
+</p>
+
+<p>
+RuleFit builds model F(x) in a three-step process: 1. build a tree ensemble (one where the b<sub>j</sub>(x)'s are decision trees), 2. generate candidate rules from the tree ensemble, and 3. fit coefficients a<sub>j</sub> via regularized regression.
+</p>
+
+REgo consists of additional R code that we've written to make working with RuleFit easier, including:
+
+<ul>
+<li>The ability to have multiple rulefit batch jobs running simultaneously</li>
+<li>Easily specifying a data source</li>
+<li>Automatically executing common preprocessing operations</li>
+<li>Automatically generating a model summary report with interpretation plots and quality assessment</li>
+<li>Exporting a model from R to SQL for deployment in a production environment</li>
+</ul>
+
+<h3>Build a Model</h3>
+<ul>
+  <li>Call: $REGO_HOME/bin/trainModel.sh --d=DATA.conf --m=MODEL.conf [--l LOGGER.txt]</li>
+  <li>Input:</li>
+  <ul>
+    <li>DATA.conf: data configuration file specifying options such as where the data is coming from, what column corresponds to the target, etc.</li>
+    <li>MODEL.conf: model configuration file specifying options such as the type of model being fit, the criteria being optimized, etc.</li>
+    <li>LOGGER.txt: optional file name where to write logging messages</li>
+  </ul>
+  <li>Output:</li>
+  <ul>
+    <li>model_summary.html: model summary and assessment</li>
+    <li>model_singleplot.html: interpretation plots</li>
+    <li>Model definition files: for later export or prediction</li>
+  </ul>
+</ul>
+<h3>Export a Model</h3>
+<ul>
+  <li>Call: $REGO_HOME/bin/exportModel.sh --m=MODEL.dir [--c=EXPORT.conf] </li>
+  <li>Input</li>
+  <ul>
+    <li>MODEL_DIR: path to model definition files</li>
+    <li>EXPORT.conf: the configuration file specifying export options such as desired sql dialect, type of scoring clause, etc.</li>
+  </ul>
+  <li>Output:</li>
+  <ul>
+    <li>SQL_FILE: output file name containing model as a SQL expression</li>
+  </ul>
+</ul>
+<h3>Predict on New Data</h3>
+<ul>
+  <li>Call: $REGO_HOME/bin/runModel.sh --m=MODEL.dir --d=DATA.conf</li>
+  <li>Input:</li>
+  <ul>
+    <li>MODEL_DIR: path to model definition files</li>
+    <li>DATA.conf: specifies test data location</li>
+  </ul>
+  <li>Output:</li>
+  <ul>
+    <li>Text file with &lt;id, y, yHat&gt; tuples </li>
+  </ul>
+</ul>
+<h3>Deploy a Model</h3>
+<ul>
+  <li>Call: $REGO_HOME/bin/runModelSQL.sh --host --dbIn --tblIn=&lt;Feature table&gt; --pk=&lt;Primary Key&gt; --model=&lt;Model Definition SQL File&gt; --dbOut --tblOut=&lt;Score table&gt;</li>
+  <li>Input</li>
+  <ul>
+    <li>dbIn.tblIn:  new data to be scored</li>
+    <li>model: previously built (and exported) model</li>
+  </ul>
+  <li>Output:</li>
+  <ul>
+    <li>dbOut.tblOut:  Computed scores</li>
+  </ul>
+</ul>
+
+<h3>Dependencies</h3>
+<ul>
+  <li><a href="http://cran.us.r-project.org/" >R</a> and R packages R2HTML, ROCR, RODBC, getopt</li>
+  <li>Other:</li>
+  <ul>
+    <li>REGO_HOME: environment variable pointing to where you have checked out the REgo code</li>
+    <li>RF_HOME: environment variable pointing to appropriate RuleFit executable -- e.g., export RF_HOME=$REGO_HOME/lib/mac</li>
+  </ul>
+</ul>

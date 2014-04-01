@@ -1,0 +1,256 @@
+#!/usr/bin/Rscript
+
+###############################################################################
+# FILE: rfPredict_main.R
+#
+# USAGE:  rfPredict_main.R -m <model.dir> -d DATA.conf
+#
+# DESCRIPTION:
+#       Computes predictions from a fitted RuleFit model.
+#
+# ARGUMENTS:
+#       model.dir: path to RuleFit model exported files
+#       DATA.conf: specifies test data location.
+#
+# REQUIRES:
+#       REGO_HOME: environment variable pointing to the directory where you 
+#                  have placed this file (and its companion ones)
+#         RF_HOME: environment variable pointing to appropriate RuleFit
+#                  executable -- e.g., export RF_HOME=$REGO_HOME/lib/RuleFit/mac
+#           
+# AUTHOR: Giovanni Seni <Giovanni_Seni@intuit.com> 
+###############################################################################
+REGO_HOME <- Sys.getenv("REGO_HOME")
+source(file.path(REGO_HOME, "/src/logger.R"))
+source(file.path(REGO_HOME, "/src/rfExport.R"))
+source(file.path(REGO_HOME, "/src/rfTrain.R"))
+source(file.path(REGO_HOME, "/lib/RuleFit/rulefit.r"))
+source(file.path(REGO_HOME, "/src/rfGraphics.R"))
+library(ROCR, verbose = FALSE, quietly=TRUE, warn.conflicts = FALSE)
+library(getopt)
+
+ValidateConfigArgs <- function(conf)
+{
+  # Validates and initializes configuration parameters.
+  #
+  # Args:
+  #      conf: A list of <param name, param value> pairs
+  # Returns:
+  #   A list of <param name, param value> pairs
+
+  ## Must have a valid data source type
+  stopifnot("data.source.type" %in% names(conf))
+  stopifnot(conf$data.source.type %in% c("csv", "db", "rdata"))
+  if (conf$data.source.type == "db") {
+    stopifnot("db.dsn" %in% names(conf) && "db.name" %in% names(conf) &&
+              "db.type" %in% names(conf) && "db.tbl.name" %in% names(conf))
+  } else if (conf$data.source.type == "csv") {
+    stopifnot("csv.path" %in% names(conf) && "csv.fname" %in% names(conf))
+  } else {  # rdata
+    stopifnot(c("rdata.path", "rdata.fname") %in% names(conf))
+  }
+
+  ## Auto-detect the platform:
+  conf$rf.platform <- switch(.Platform$OS.type
+                             , windows = "windows"
+                             , unix = switch(Sys.info()["sysname"]
+                                   , Linux = "linux"
+                                   , Darwin = "mac"))
+
+  if (is.null(conf$rf.platform)) error(logger, "Unable to detect platform")
+
+  ## Did user specified a log level?
+  if (is.null(conf$log.level)) {
+    conf$log.level <- kLogLevelINFO
+  } else {
+    conf$log.level <- get(conf$log.level)
+  }
+  
+  ## Did user specified an output file?
+  if (is.null(conf$out.fname)) {
+    conf$out.fname <- "rfPredict_out.csv"
+  }
+
+  return(conf)
+}
+
+ValidateCmdArgs <- function(opt, args.m)
+{
+  # Parses and validates command line arguments.
+  #
+  # Args:
+  #      opt: getopt() object
+  #   args.m: valid arguments spec passed to getopt().
+  #
+  # Returns:
+  #   A list of <param name, param value> pairs
+  kUsageString <- "/path/to/rfPredict_main.R -m <model dir> -d <Data configuration file>"
+  
+  # Validate command line arguments
+  if ( !is.null(opt$help) || is.null(opt$model_path) || is.null(opt$data_conf) ) {
+    self <- commandArgs()[1]
+    cat("Usage: ", kUsageString, "\n")
+    q(status=1);
+  }
+
+  # Read config file (two columns assumed: 'param' and 'value')
+  tmp <- read.table(opt$data_conf, header=T, as.is=T)
+  conf <- as.list(tmp$value)
+  names(conf) <- tmp$param
+  conf <- ValidateConfigArgs(conf)
+
+  # Check Model path
+  if (!(file.exists(opt$model_path))) {
+    stop("Didn't find model directory:", opt$model_path, "\n")
+  } else {
+    conf$model.path <- opt$model_path
+  }
+  
+  # Do we have a log file name? "" will send messages to stdout
+  if (is.null(opt$log)) {
+    opt$log <- ""
+  }
+  conf$log.fname <- opt$log
+  
+  return(conf)
+}
+
+
+##############
+## Main
+#
+
+# Grab command-line arguments
+args.m <- matrix(c(
+        'model_path'  ,'m', 1, "character",
+        'data_conf'   ,'d', 1, "character",
+        'log'         ,'l', 1, "character",
+        'help'        ,'h', 0, "logical"
+    ), ncol=4,byrow=TRUE)
+opt <- getopt(args.m)
+conf <- ValidateCmdArgs(opt, args.m)
+
+# Set global env variables required by RuleFit
+platform <- conf$rf.platform
+RF_HOME <- Sys.getenv("RF_HOME")
+RF_WORKING_DIR <- conf$rf.working.dir
+
+# Create logging object
+logger <- new("logger", log.level = conf$log.level, file.name = conf$log.fname)
+info(logger, paste("rfPredict_main args:", 'model.path =', conf$model.path,
+                   ', log.level =', conf$log.level, ', out.fname =', conf$out.fname))
+
+## Use own version of png() if necessary:
+if (isTRUE(conf$graph.dev == "Bitmap")) {
+  png <- png_via_bitmap
+  if (!CheckWorkingPNG(png)) error(logger, "cannot generate PNG graphics")
+} else {
+  png <- GetWorkingPNG()
+  if (is.null(png)) error(logger, "cannot generate PNG graphics")
+}
+
+# Load data
+if (conf$data.source.type == "db") {
+  error(logger, paste("rfPredict_main.R: not yet implemented data source type ", conf$data.source.type))
+} else if (conf$data.source.type == "csv") {
+  data <- read.csv(file.path(conf$csv.path, conf$csv.fname), na.strings = "")
+} else if (conf$data.source.type == "rdata") {
+  envir <- new.env()
+  load(file.path(conf$rdata.path, conf$rdata.fname), envir = envir)
+  if (is.null(conf$rdata.dfname)) {
+    dfname <- ls(envir)
+    stopifnot(length(dfname) == 1)
+  } else {
+    dfname <- conf$rdata.dfname
+  }
+  data <- get(dfname, envir, inherits = FALSE)
+  stopifnot(is.data.frame(data))
+  rm(envir)
+} else {
+  error(logger, paste("rfPredict_main.R: unknown data source type ", conf$data.source.type))
+}
+info(logger, paste("Data loaded: dim =", nrow(data), "x", ncol(data), "; NAs =",
+                   length(which(is.na(data) == T)), "(",
+                   round(100*length(which(is.na(data) == T))/(nrow(data)*ncol(data)), 2),
+                   "%)"))
+
+# Load & restore model
+mod <- LoadModel(conf$model.path)
+ok <- 1
+tryCatch(rfrestore(mod$rfmod, mod$x, mod$y, mod$wt), error = function(err){ok <<- 0})
+if (ok == 0) {
+  error(logger, "rfPredict_main.R: got stuck in rfrestore")
+}
+rf.mode <- ifelse(length(unique(mod$y)) == 2, "class", "regress")
+
+# Extract columns used to build model
+ok <- 1
+tryCatch(x.test <- data[,colnames(mod$x)], error = function(err){ok <<- 0})
+if (ok == 0) {
+  error(logger, "rfPredict_main.R: train/test column mismatch")
+} 
+
+# Predict
+y.hat <- rfpred(x.test)
+if (rf.mode == "class") {
+  # "classification" model... convert from log-odds to probability estimates
+  y.hat <- 1.0/(1.0+exp(-y.hat))
+}
+
+# Compute test error (if y is known)
+if ("col.y" %in% names(conf)) {
+  y <- data[,conf$col.y]
+  if (rf.mode == "class") {
+    conf.m <- table(y, sign(y.hat - 0.5))
+    stopifnot("0" %in% rownames(conf.m))
+    stopifnot("1" %in% rownames(conf.m))
+    TN <- ifelse("-1" %in% colnames(conf.m), conf.m["0", "-1"], 0)
+    FP <- ifelse("1" %in% colnames(conf.m), conf.m["0","1"], 0)
+    FN <- ifelse("-1" %in% colnames(conf.m), conf.m["1", "-1"], 0)
+    TP <- ifelse("1" %in% colnames(conf.m), conf.m["1","1"], 0)    
+    test.acc <- 100*(TN+TP)/length(y.hat)
+    info(logger, paste("Test acc:", round(test.acc, 2)))
+    info(logger, sprintf("Test confusion matrix - 0/0: %d, 0/1: %d, 1/0: %d, 1/1: %d",
+                         TN, FP, FN, TP))
+    # AUC
+    pred <- prediction(y.hat, y)
+    perf <- performance(pred, "auc")
+    info(logger, paste("Area under the ROC curve:", as.numeric(perf@y.values)))
+
+    # Generate ROC plot
+    kPlotWidth <- 620
+    kPlotHeight <- 480
+    plot.fname <- "ROC.png"
+    pred <- prediction(y.hat, y)
+    perf <- performance(pred, "tpr", "fpr")
+    png(file = file.path(conf$out.path, plot.fname), width=kPlotWidth, height=kPlotHeight)
+    plot(perf, colorize=T, main="")
+    lines(x=c(0, 1), y=c(0,1))
+    dev.off()
+  } else {
+    re.test.error <- sum(abs(y.hat - y))/nrow(x.test)
+    med.test.error <- sum(abs(y - median(y)))/nrow(x.test)
+    aae.test <- re.test.error / med.test.error
+    info(logger, sprintf("Test AAE: %f (RE:%f, Med:%f)", aae.test, re.test.error, med.test.error))
+  }  
+} else {
+  y <- rep(NA, nrow(data))
+}
+
+# Plot histogram of yHat
+kPlotWidth <- 620
+kPlotHeight <- 480
+plot.fname <- "yHat_hist.png"
+png(file = file.path(conf$out.path, plot.fname), width=kPlotWidth, height=kPlotHeight)
+hist(y.hat, main="")
+dev.off()
+
+# Dump <id, y, yHat> tuples, as appropriate
+if ("col.id" %in% names(conf)) {
+  obs.id <- data[,conf$col.id]
+} else {
+  obs.id <- rep(NA, nrow(data))
+}
+WriteObsIdYhat(out.path = conf$out.path, obs.id = obs.id, y = y, y.hat = y.hat, file.name = conf$out.fname)
+
+q(status=0)

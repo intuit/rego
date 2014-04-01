@@ -1,0 +1,1202 @@
+<HTML>
+<HEAD>
+  <TITLE>RuleFit help procedures</TITLE>
+</HEAD>
+<BODY bgcolor="#FFFDDE">
+<H1 ALIGN=Center>
+  Rule Based Learning Ensembles
+</H1>
+<P ALIGN=Center>
+<FONT COLOR="Fuchsia"><BIG><BIG><BIG><BIG><B><BIG><BIG><BIG><BIG>RuleFit</BIG></BIG></BIG></BIG></B></BIG></BIG></BIG></BIG></FONT><BIG><BIG><BIG><BIG>
+<BIG>with</BIG>
+&nbsp;<FONT COLOR="Blue"><BIG><BIG><BIG><BIG><B><BIG>R</BIG></B></BIG></BIG></BIG></BIG></FONT></BIG></BIG></BIG></BIG>
+<P ALIGN=Center>
+&nbsp;<BIG>(7/07/12</BIG>)
+<P ALIGN=Center>
+<BIG></BIG>
+<P>
+<A HREF="#installation"><BIG>Installation</BIG></A>
+<P>
+<BIG><A HREF="#Overview">Overview</A></BIG>
+<P>
+<FONT COLOR="Purple"><BIG>Model building :
+</BIG></FONT><BIG>&nbsp;</BIG><FONT COLOR="Blue"><BIG><BIG><A HREF="#rulefit">rulefit</A></BIG></BIG></FONT>
+<P>
+<FONT COLOR="Purple"><BIG>Model manipulation :
+</BIG></FONT><BIG>&nbsp;</BIG><FONT COLOR="Blue"><BIG><BIG><A HREF="#getmodel">getmodel</A>,
+&nbsp;<A HREF="#rfrestore">rfrestore</A>,
+&nbsp;<A HREF="#rfannotate">rfannotate</A>,
+&nbsp;<A HREF="#rfmodinfo">rfmodinfo</A>,
+&nbsp;<A HREF="#runstats">runstats</A></BIG></BIG></FONT>
+<P>
+<FONT COLOR="Purple"><BIG>Cross-validation :
+</BIG></FONT><BIG>&nbsp;</BIG><FONT COLOR="Blue"><BIG><BIG><A HREF="#rfxval">rfxval</A></BIG></BIG></FONT>
+<P>
+<FONT COLOR="Purple"><BIG>Prediction:
+</BIG></FONT><BIG>&nbsp;</BIG><FONT COLOR="Blue"><BIG><BIG><A HREF="#rfpred">rfpred</A></BIG></BIG></FONT>
+<P>
+<FONT COLOR="Purple"><BIG>Variable importance:
+</BIG></FONT><BIG>&nbsp;</BIG><FONT COLOR="Blue"><BIG><BIG><A HREF="#varimp">varimp</A></BIG></BIG></FONT>
+<P>
+<FONT COLOR="Purple"><BIG>Interaction effects :
+</BIG></FONT><BIG>&nbsp;</BIG><FONT COLOR="Blue"><BIG><BIG><A HREF="#interact">interact</A>,
+&nbsp;<A HREF="#twovarint">twovarint</A>,
+&nbsp;<A HREF="#threevarint">threevarint</A>,
+&nbsp;<A HREF="#intnull">intnull</A>,
+<A HREF="#rfnullinfo">rfnullinfo</A></BIG></BIG></FONT>
+<P>
+<FONT COLOR="Purple"><BIG>Display rules :
+</BIG></FONT><BIG>&nbsp;</BIG><FONT COLOR="Blue"><BIG><BIG><A HREF="#rules">rules</A></BIG></BIG></FONT>
+<P>
+<FONT COLOR="Purple"><BIG>Partial dependence plots :
+</BIG></FONT><BIG>&nbsp;</BIG><FONT COLOR="Blue"><BIG><BIG><A HREF="#singleplot">singleplot</A>,
+&nbsp;<A HREF="#pairplot">pairplot</A></BIG></BIG></FONT>
+<P>
+<FONT COLOR="Purple"><BIG>Other &nbsp;:
+</BIG></FONT><BIG>&nbsp;</BIG><FONT COLOR="Blue"><BIG><BIG><A HREF="#rfversion">rfversion</A></BIG></BIG></FONT>
+<P>
+<I> </I> 
+  <HR>
+<H2>
+  <A NAME="installation">Installation Instructions:</A>
+</H2>
+<P>
+Open R
+<P>
+AT the R command prompt enter:
+<P>
+&nbsp; &nbsp;&gt; platform = "PLATFORM"<BR>
+&nbsp; &nbsp;&gt; rfhome = "RFHOME"<BR>
+&nbsp; &nbsp;&gt; source("RFHOME/rulefit.r")<BR>
+&nbsp; &nbsp;&gt; install.packages("akima", lib=rfhome)<BR>
+&nbsp; &nbsp;&gt; library(akima, lib.loc=rfhome)
+<P>
+Here "PLATFORM" is either the text string "windows" , "linux", or "mac" depending
+on the running operating system, and RFHOME is a text string indicating the
+full path name (using forward slashes / ) of the directory where &nbsp;rulefit.r
+and rf_go.exe are stored. This will be the RuleFit home directory. (examples:
+rfhome = "/R_RuleFit"; rfhome = "/home/jhf/R_RuleFit")
+<P>
+<B>Notes:</B> the computer must be connected to the internet to execute the
+install.packages command. Only the last command is needed every time R is
+entered. The others need only be entered the first time provided that on
+exit from R the "yes" option is selected at the "Save workspace image" prompt.
+<P>
+  <HR>
+<BIG><BIG><BIG><B><A NAME="Overview">Overview:</A></B></BIG></BIG></BIG>
+<P>
+RuleFit implements the model building and interpretational tools described
+in &nbsp;<FONT COLOR="Red"><I>Predictive Learning via Rule Ensembles</I>
+</FONT>(<A HREF="http://www-stat.stanford.edu/~jhf/ftp/RuleFit.pdf">FP
+2004</A>). Some familiarity with this paper is recommended. The documentation
+refers to sections in the paper describing the various options in detail.
+<P>
+The &nbsp;R/RuleFit interface consists of the R procedures described below.
+The principal procedure is <A HREF="#rulefit">rulefit</A>. It builds the
+RuleFit model given the input data and various procedure parameters. This
+model is stored in the RuleFit home directory RFHOME and invisibly returned
+as a a RuleFit model object (list) to R. All other RuleFit procedures reference
+the current model and its input data as stored in the RuleFit home directory.
+Every time the procedure <A HREF="#rulefit">rulefit</A> is invoked the resulting
+RuleFit model overwrites the previously stored model and its input data,
+thereby replacing it as the current model.
+<P>
+Previously constructed (and saved) models and their input data can be replaced
+in the RuleFit home directory for analysis at a later time using the procedure
+<A HREF="#rfrestore">rfrestore</A>, thereby overwriting the current model
+and its data. This replaced model and data then become the current ones in
+the RuleFit directory and all RuleFit procedures (other than
+<A HREF="#rulefit">rulefit</A> ) will reference them until either a different
+previously constructed model and its data are placed in the directory, or
+the <A HREF="#rulefit">rulefit</A> procedure is subsequently invoked. At
+any time, the current model in the RuleFit home directory can be obtained
+(and saved) as a named R object using the procedure
+<A HREF="#getmodel">getmodel</A>. The properties of any RuleFit model object
+can be viewed using the procedure <A HREF="#rfmodinfo">rfmodinfo</A>.
+<P>
+With any RuleFit procedure input predictor variables can be referenced either
+by their &nbsp;respective column numbers in the input data matrix or data
+frame, or by their corresponding character column variable names, if present.
+Character variable names can be associated with columns using the
+<I>colnames</I> feature in R or by providing them as part of an input data
+frame. If variable names are specified then all output will reference those
+names. If not, the column numbers will be used to reference the input variables.
+<P>
+  <HR>
+<H2>
+  <BIG><A NAME="rulefit">rulefit:</A></BIG> build a RuleFit Model
+</H2>
+<P>
+<BIG>Usage:</BIG>
+<P>
+<A HREF="#rfmod">rfmod</A> = rulefit (<A HREF="#x">x</A>, <A HREF="#y">y</A>,
+<A HREF="#wt">wt</A>=rep(1,nrow(x)), <A HREF="#cat.vars">cat.vars</A>=NULL,
+<A HREF="#not.used">not.used</A>=NULL, <A HREF="#xmiss">xmiss</A>=9.0e30,
+<A HREF="#rfmode">rfmode</A>="regress", <A HREF="#sparse">sparse</A>=1,
+<A HREF="#test.reps">test.reps</A>=round(min(20,max(0.0,5200/neff-2))),
+<A HREF="#test" NAME="test.fract">test.fract</A>=0.2,
+<A HREF="#mod.sel">mod.sel=2</A>,
+&nbsp;<A HREF="#model.type">model.type</A>="both",
+&nbsp;<A HREF="#tree.size">tree.size</A>=4,
+<A HREF="#max.rules">max.rules</A>=2000,
+<A HREF="#max.trms">max.trms</A>=500, <A HREF="#costs">costs</A>=c(1,1),
+<A HREF="#trim.qntl">trim.qntl</A>=0.025,
+<A HREF="#samp.fract">samp.fract</A>=min(1,(11*sqrt(neff)+1)/neff),
+<A HREF="#memory.par">i<A HREF="#inter.supp">nter.supp</A>=3.0</A>,
+<A HREF="#memory.par"><A HREF="#memory.par">memory.par</A></A>=0.01,
+<A HREF="#conv.thr">conv.thr</A>=1.0e-3, <A HREF="#quiet22">quiet</A>=F,
+<A HREF="#tree.store">tree.store</A>=10000000,
+<A HREF="#cat.store">cat.store</A>=1000000)
+<P>
+<BIG>Required arguments:</BIG>
+<P>
+<FONT COLOR="Red"><A NAME="x">x</A> </FONT>= input predictor data matrix
+or data frame. Rows are observations and columns are variables. Must be a
+numeric matrix or a data frame.
+<P>
+<FONT COLOR="Red"><A NAME="y">y </A></FONT>= input response values. For
+classification (<A HREF="#rfmode">rfmode</A>="class", see below) values must
+only be +1 or -1.<BR>
+If y is a single valued scalar it is interpreted as a label (number or name)
+referencing a column of x. Otherwise it is a vector of length nrow(x) containing
+the &nbsp;numeric response values.
+<P>
+<BIG>Optional arguments:</BIG>
+<P>
+<FONT COLOR="Red"><A NAME="wt">wt</A></FONT><FONT COLOR="Blue"> </FONT>=
+observation weights.<BR>
+If wt is a single valued scalar it is interpreted as a label (number or name)
+referencing a column of x. Otherwise it is a vector of length nrow(x) containing
+the numeric observation weights.
+<P>
+<FONT COLOR="Red"><A NAME="cat.vars">cat.vars</A> </FONT>= vector of column
+labels (numbers or names) indicating categorical variables (factors). All
+variables not so indicated are assumed to be orderable numeric. If x is a
+data frame and cat.vars is missing, then components of type factor are treated
+as categorical variables. Ordered factors should be input as type numeric
+with appropriate numerical scores. If cat.vars is present it will override
+the data frame typing.
+<P>
+<FONT COLOR="Red"><A NAME="not.used">not.used</A> </FONT>= vector of column
+labels (numbers or names) indicating predictor variables not to be used in
+the model.
+<P>
+<FONT COLOR="Red"><A NAME="xmiss">xmiss</A></FONT><FONT COLOR="Blue"> </FONT>=
+predictor variable missing value flag. Must be numeric and larger than any
+non missing predictor variable value. &nbsp;Predictor variable values greater
+than or equal to xmiss are regarded as missing. Predictor variable data values
+of NA are internally set to the value of xmiss and thereby regarded as missing.
+<P>
+<FONT COLOR="Red"><A NAME="rfmode">rfmode</A></FONT><A NAME="rfmode"> </A>=
+regression /classification flag<FONT COLOR="Blue"><BR>
+</FONT><FONT COLOR="Green">rfmode="regress" </FONT>=&gt; regression. The
+outcome or response variable is regarded as numerically valued and the model
+is used to predict the value of the response.<FONT COLOR="Blue"><BR>
+</FONT><FONT COLOR="Green">rfmode="class"</FONT><FONT COLOR="Blue">
+</FONT>=&gt; binary classification. The model produces a numeric score that
+predicts the log-odds of realizing a response value of &nbsp;+1.
+<P>
+<FONT COLOR="Red"><A NAME="sparse">sparse</A> </FONT>= model sparsity control.
+Larger values tend to produce sparser models with fewer terms; smaller values
+tend to produce denser models with more terms.<BR>
+<FONT COLOR="Green">0 &lt;</FONT> <FONT COLOR="Green">sparse &lt; 1
+</FONT>=&gt; elastic net regression to fit final model&nbsp;with the
+corresponding parameter alpha set to the value of sparse<BR>
+<FONT COLOR="Green">sparse = 1</FONT>=&gt; lasso regression to fit final
+model<BR>
+<FONT COLOR="Green">sparse = 2 </FONT>=&gt; <FONT COLOR="Black">lasso to
+select variable entry order for forward stepwise regression<BR>
+</FONT><FONT COLOR="Green">sparse = 3</FONT>&nbsp;=&gt; regression: forward
+stepwise to select variables and fit model. Binary classification: forward
+statewise to select variables and fit model.
+<P>
+<FONT COLOR="Red"><A NAME="test.reps">test.reps</A></FONT> = number of
+cross-validation replications used for model selection.<BR>
+<FONT COLOR="Green">test.reps = 0 </FONT>=&gt; 1 - fold cross-validation;
+final model based on learning sample<BR>
+<FONT COLOR="Green">test.reps &gt; 0 </FONT>=&gt; test.reps - fold
+cross-validation; final model based on whole training
+sample<FONT COLOR="Blue">.<BR>
+</FONT>Note that the default value refers to the "effective" &nbsp;number
+of training observations &nbsp;(neff) given by neff =
+sum(<A HREF="#wt">wt</A>)^2/sum(<A HREF="#wt">wt</A>^2) for regression. For
+classification this is multiplied by 4*fpos*(1-fpos) where fpos is the fraction
+of positive labeled (y = 1) observations. (Use larger values of test.reps
+for smaller training samples.)
+<P>
+<FONT COLOR="Red"><A NAME="test">test.fract</A></FONT> = learning / test
+sample partition<BR>
+<FONT COLOR="Green">test.fract </FONT><FONT COLOR="Black">=</FONT> fraction
+of input observations used it test sample.
+<P>
+<FONT COLOR="Red"><A NAME="mod.sel">mod.sel</A> </FONT>= model selection
+criterion<BR>
+<FONT COLOR="Green">mod.sel = 1 </FONT>=&gt;
+<FONT COLOR="Purple">regression</FONT>: average absolute error loss.
+<FONT COLOR="Purple">binary classification</FONT>: correlation criterion
+similar to 1 - AUC<BR>
+<FONT COLOR="Green">mod.sel = 2 </FONT>=&gt;
+<FONT COLOR="Purple">regression</FONT><FONT COLOR="Black">: average squared-error
+loss: </FONT><FONT COLOR="Purple">binary
+classification</FONT><FONT COLOR="Black">: average squared-error loss on
+predicted probabilities<BR>
+</FONT><FONT COLOR="Green">mod.sel = 3</FONT>&nbsp;=&gt;
+<FONT COLOR="Purple">binary classification</FONT>: misclassification risk
+<P>
+<FONT COLOR="Red"><A NAME="model.type">model.type</A></FONT> = rule generation
+flag for numeric variables<BR>
+<FONT COLOR="Green">model.type = "linear" </FONT>=&gt; only linear model
+for orderable numeric variables (no rules). Generate rules only for unorderable
+categorical variables (factors), if any. See
+<A HREF="#cat.vars">cat.vars</A><BR>
+<FONT COLOR="Green">model.type = "rules" </FONT>=&gt; use only generated
+rules to fit model (no linear variables)<FONT COLOR="Blue">. </FONT>This
+choice makes the <FONT COLOR="Black">model invariant to strictly
+monotone</FONT><FONT COLOR="Blue"> </FONT><FONT COLOR="Black">transformations
+of the predictor variables.</FONT><FONT COLOR="Blue"><BR>
+</FONT><FONT COLOR="Green">model.type = "both"</FONT> &nbsp;=&gt; use both
+to fit model
+<P>
+<FONT COLOR="Red"><A NAME="tree.size">tree.size</A></FONT> = average number
+of terminal nodes in generated trees. <A HREF="#FP 2004">FP 2004</A> (Sec.
+3.3) <FONT COLOR="Green">Tree.size = 2</FONT> produces an additive main effects
+model with no interactions allowed among the predictor variables.
+<FONT COLOR="Green">Tree.size &gt;&nbsp;2</FONT> permits higher order
+interactions with the permitted interaction order increasing with the value
+of <FONT COLOR="Green">tree.size</FONT>.
+<P>
+<FONT COLOR="Red"><A NAME="max.rules">max.rules</A> </FONT>= approximate
+total number of rules generated for regression fitting. Note: with missing
+values, the actual number of rules generated may be considerably larger than
+max.rules.
+<P>
+<FONT COLOR="Red"><A NAME="max.trms">max.trms </A></FONT>= maximum number
+of terms selected for&nbsp;final model
+<P>
+<FONT COLOR="Red"><A NAME="costs">costs</A><A NAME="max.rules"> </A></FONT>=
+<FONT COLOR="Purple">binary classification</FONT>: misclassificarion costs
+(<A HREF="#mod.sel">mod.se</A>l =3 only)<BR>
+<FONT COLOR="Green">costs[1] = </FONT><FONT COLOR="Black">cost for class
++1 error</FONT><BR>
+<FONT COLOR="Green">costs [2]= </FONT>cost for class -1 error
+<P>
+<FONT COLOR="Red"><A NAME="trim.qntl">trim.qntl</A></FONT> = linear variable
+conditioning factor. Ignored for <A HREF="#model.type">model.type</A> = "rules"
+. <A HREF="#FP 2004">FP 2004</A> (Sec. 5)
+<P>
+<FONT COLOR="Red"><A NAME="samp.fract">samp.fract</A></FONT> = fraction of
+randomly chosen training observations used to produce each tree.
+<A HREF="#FP 2004">FP 2004</A> (Sec. 2). Note that the default value refers
+to the "effective" number of training observations &nbsp;(neff) given by
+neff = sum(<A HREF="#wt">wt</A>)^2/sum(<A HREF="#wt">wt</A>^2) for regression.
+For classification this is multiplied by 4*fpos*(1-fpos) where fpos is the
+fraction of positive labeled (y = 1) observations.
+<P>
+<FONT COLOR="Red"><A NAME="inter.supp">inter.supp</A></FONT> = incentive
+factor for using fewer variables in tree based rules. <A HREF="#FP 2004">FP
+2004 </A>(Sec. 8.2)
+<P>
+<FONT COLOR="Red"><A NAME="memory.par">memory.par</A></FONT> = scale multiplier
+(shrinkage factor or learning rate) applied to each new tree when sequentially
+induced. <A HREF="#FP 2004">FP 2004</A> (Sec. 2)
+<P>
+<FONT COLOR="Red"><A NAME="conv.thr">conv.thr </A></FONT>= convergence threshold
+for regression solutions. Iterations stop when the maximum standardized
+coefficient change from the previous iteration is less than conv.thr
+<P>
+<FONT COLOR="Red"><A NAME="quiet22">quiet</A></FONT> =
+<FONT COLOR="Black">T/F=&gt;</FONT><FONT COLOR="Green"> </FONT>do/don't surpress
+progress monitor as program executes
+<P>
+<FONT COLOR="Red">&nbsp;<A NAME="tree.store">tree.store</A></FONT> = size
+of internal tree storage. Decrease value in response to memory allocation
+error. Increase value for very large values of
+<A HREF="#max.rules">max.rules</A> and/or <A HREF="#tree.size">tree.size</A>,
+or in response to diagnostic message or erratic program behaivor.
+<P>
+<FONT COLOR="Red"><A NAME="cat.store">cat.store</A></FONT> = size of internal
+categorical value storage. Decrease value in response to memory allocation
+error. Increase value for very large values of
+<A HREF="#max.rules">max.rules</A> and/or <A HREF="#tree.size">tree.size</A>
+in the presence of many categorical variables (factors) with many levels,
+or&nbsp;in response to diagnostic message or erratic program behaivor.
+<P>
+<BIG>Output:</BIG>
+<P>
+<FONT COLOR="Red"><A NAME="rfmod">rfmod</A> </FONT>= RuleFit model object
+representing the model placed in the RuleFit home directory. Can be replaced
+at a later time using <A HREF="#rfrestore">rfrestore</A>.
+<P>
+Printed output at the command line giving the cross-validated model selection
+criterion value with standard error (<A HREF="#test.reps">test.reps </A>&gt;
+1), and number of terms in the resulting model.
+<P>
+<BIG>Examples:</BIG>
+<P>
+rulefit(x, y); &nbsp;rfxyw = rulefit(x, y, w); <BR>
+rfxycls = rulefit(x, 14, 33, cat.vars=c(2,4,5,7,9), not.used=c(1,3),
+rfmode="class", tree.size=2)<BR>
+rfbosthouse=rulefit(bostdat,"MEDV", cat.vars="CHAS", sparse=3,
+model.type='linear')
+<P>
+<BIG>Reference:</BIG><A HREF="http://www-stat.stanford.edu/~jhf/ftp/RuleFit.pdf"
+    NAME="FP 2004"> Friedman, J. H. and Popescu, B. E. (2004). Predictive learning
+via rule ensembles.</A>
+<P>
+  <HR>
+<P>
+<BIG><BIG><BIG><A NAME="getmodel">getmodel:</A></BIG> retrieve current model
+from RuleFit home directory</BIG></BIG>
+<P>
+<BIG>Usage:</BIG>
+<P>
+<FONT COLOR="Red">rfmod</FONT> = getmodel ()
+<P>
+<BIG>Arguments:</BIG> none
+<P>
+<BIG>Output:</BIG>
+<P>
+<FONT COLOR="Red"><A NAME="rfmod">rfmod</A> </FONT>= RuleFit model object
+representing the model currently &nbsp;stored in the RuleFit home directory.
+Can be replaced in the home directory at a later time using
+<A HREF="#rfrestore">rfrestore</A>.
+<P>
+  <HR>
+<P>
+<BIG><BIG><BIG><A NAME="rfrestore">rfrestore:</A></BIG> replace (change)
+the current model in RuleFit home directory</BIG></BIG>
+<P>
+<BIG>Usage:</BIG>
+<P>
+rfrestore (model, x=NULL, y=NULL, wt=rep(1,nrow(x)))
+<P>
+<BIG>Required argument</BIG>:
+<P>
+<FONT COLOR="Red">model</FONT> = RuleFit model object output from
+<A HREF="#rulefit">rulefit </A>or <A HREF="#getmodel">getmodel</A>
+<P>
+<BIG>Optional arguments:</BIG>
+<P>
+<FONT COLOR="Red"><A NAME="x">x</A> </FONT>= input predictor data matrix
+or data frame used to construct model.
+<P>
+<FONT COLOR="Red"><A NAME="y">y </A></FONT>= input response values used to
+construct model.<BR>
+If y is a single valued scalar it &nbsp;is interpreted as a label (number
+or name) referencing a column of x. Otherwise it is a vector of length nrow(x)
+containing the &nbsp;numeric response values.
+<P>
+<FONT COLOR="Red"><A NAME="wt">wt</A></FONT><FONT COLOR="Blue"> </FONT>=
+observation weights used to construct model.<BR>
+If wt is a single valued scalar it is interpreted as a label (number or name)
+referencing a column of x. Otherwise it is a vector of length nrow(x) containing
+the &nbsp;numeric observation weights.
+<P>
+<BIG>Output:</BIG> &nbsp;none
+<P>
+<BIG>Examples:</BIG> &nbsp;rfrestore (rfmod); &nbsp;rfrestore (rfbosthouse,
+bostdat, "MEDV")
+<P>
+<BIG>Comment: </BIG>each of the optional arguments need only be included
+if the corresponding quantities in the RuleFit home directory have changed
+since the model was created. That is if <A HREF="#rulefit">rulefit</A> or
+<A HREF="#rfrestore">rfrestore</A> &nbsp;were invoked with different data
+after model was created.
+<P>
+  <HR>
+<P>
+<BIG><BIG><BIG><A NAME="rfannotate">rfannotate:</A></BIG> replace RuleFit
+model object&nbsp;text description</BIG></BIG>
+<P>
+<BIG>Usage:</BIG>
+<P>
+<FONT COLOR="Red">rfmod</FONT> = rfannotate (rfmod, "text")
+<P>
+<BIG>Required arguments</BIG>:
+<P>
+<FONT COLOR="Red">rfmod</FONT> = RuleFit model object output from
+<A HREF="#rulefit">rulefit </A>or <A HREF="#getmodel">getmodel</A>
+<P>
+<FONT COLOR="Red">text </FONT>= character string
+<P>
+<BIG>Output:</BIG>
+<P>
+<FONT COLOR="Red">rfmod</FONT> = same RuleFit model object as input model
+with new text description
+<P>
+<BIG>Examples:</BIG> &nbsp;rfbosthouse = rfannotate(rfbosthouse, "This is
+a RuleFit model for&nbsp;Boston housing data")
+<P>
+<BIG><BIG> </BIG>Comment: </BIG>the model description text is printed along
+with other model information at the command line in response to the command
+<A HREF="#rfmodinfo">rfmodinfo</A>. The original text for a &nbsp;rulefit
+model object is the R command that gave rise to it.
+<P>
+  <HR>
+<P>
+<BIG><BIG><BIG><A NAME="rfmodinfo">rfmodinfo:</A></BIG> view the properties
+of a RuleFit model object</BIG></BIG>
+<P>
+<BIG>Usage:</BIG>
+<P>
+rfmodinfo (model)
+<P>
+<BIG>Required argument</BIG>:
+<P>
+<FONT COLOR="Red">model</FONT> = RuleFit model object
+<P>
+<BIG>Output:</BIG> none
+<P>
+<BIG>Examples:</BIG> &nbsp;rfmodinfo (rfbosthouse); rfmodinfo
+(<A HREF="#getmodel">getmodel </A>())
+<P>
+<BIG>Comment:</BIG> prints at the command line &nbsp;the model description
+text, the date and time the model was created , fit summary, and all parameter
+values used to construct the model.
+<P>
+  <HR>
+<P>
+<BIG><BIG><BIG><A NAME="runstats">runstats:</A></BIG> obtain fit statistics
+of a RuleFit model</BIG></BIG>
+<P>
+<BIG>Usage:</BIG>
+<P>
+stats = runstats (model)
+<P>
+<BIG>Required arguments</BIG>: none
+<P>
+If the arguement is missing the current model in the rulefit home directory
+is used.
+<P>
+<BIG>Optional argument</BIG>:
+<P>
+<FONT COLOR="Red">model</FONT> = supplied RuleFit model object
+<P>
+<BIG>Output:</BIG> list
+<P>
+<FONT COLOR="Red">stats$cri</FONT> = cross-validated criterion value
+<P>
+<FONT COLOR="Red">stats$err</FONT> = associated uncertainity estimate
+<P>
+<FONT COLOR="Red">stats$terms </FONT>= number of terms in the model
+<P>
+<BIG>Examples:</BIG> &nbsp;stats=runstats (rfbosthouse)
+<P>
+<BIG>Comment:</BIG> the output quantities are those printed at the command
+line by rulefit, rfmodinfo, and rfrestore.
+<P>
+  <HR>
+<P>
+<BIG><BIG><BIG><A NAME="rfxval">rfxval:</A></BIG> full cross-validation of
+RuleFit model</BIG></BIG>
+<P>
+<BIG>Usage:</BIG>
+<P>
+<FONT COLOR="Red">xval</FONT> = rfxval (nfold=10, quiet=F)
+<P>
+<BIG>Optional arguments</BIG>:
+<P>
+<FONT COLOR="Red">nfold</FONT> = number of folds (&gt;/= 2)
+<P>
+<FONT COLOR="Red">quiet </FONT><FONT COLOR="Black">= T/F
+=&gt;</FONT><FONT COLOR="Green"> </FONT>do/don't surpress progress monitor
+as program executes
+<P>
+<BIG>Output:</BIG> &nbsp;list
+<P>
+<B>Regression:</B>
+<P>
+<FONT COLOR="Red">xval$yp</FONT> = cross-validated response <I>y</I>
+&nbsp;predicted values for each of the training observations.
+<P>
+<FONT COLOR="Red">xval$aae</FONT> = average-absolute prediction error
+<P>
+<FONT COLOR="Red">xval$rms</FONT> = root-mean-squared prediction error
+<P>
+<B>Classification:</B>
+<P>
+<FONT COLOR="Red">xval$lo</FONT> = cross-validated estimates of the log-odds
+that <I>y </I>= +1 for each of the training observations.
+<P>
+<FONT COLOR="Red">xval$omAUC</FONT> = 1 - area under ROC curve
+<P>
+<FONT COLOR="Red">xval$errave</FONT> = average error rate
+<P>
+<FONT COLOR="Red">xval$errpos</FONT> = positive (<I>y</I> = +1) error rate
+<P>
+<FONT COLOR="Red">xval$errneg</FONT> = negative (<I>y</I> = -1) error rate
+<P>
+<BIG>Examples:</BIG> &nbsp;rfxval (); &nbsp;xval= rfxval(20, T)
+<P>
+<BIG>Comment: </BIG>Uses current model in the RuleFit home directory. All
+errors are computed using the observation weights.
+<P>
+  <HR>
+<P>
+<BIG><BIG><BIG><A NAME="rfpred">rfpred:</A></BIG> predict using the RuleFit
+model</BIG></BIG>
+<P>
+<BIG>Usage:</BIG>
+<P>
+<FONT COLOR="Red">yp</FONT> = rfpred (xp)
+<P>
+<BIG>Required argument</BIG>:
+<P>
+<FONT COLOR="Red">xp</FONT> = values of the &nbsp;input variables for the
+observation(s) to be predicted. Must be a data frame if a data frame was
+used to construct the model in the RuleFit home directory. Otherwise it must
+be a numeric vector or matrix.
+<P>
+<BIG>Output:</BIG>
+<P>
+<FONT COLOR="Red">yp</FONT> = vector of length nrow(xp) containing the output
+predictions for each of the observations.
+<P>
+<B>Regression:</B>&nbsp; yp is used to predict the &nbsp;response value(s).
+<P>
+<B>Classification:</B> yp is a numeric score representing the estimated log-odds
+of y = +1. The corresponding probability estimates can be computed as probs
+= 1.0/(1.0+exp(-yp)).
+<P>
+<BIG>Example:</BIG> &nbsp;yp = rfpred (xp)
+<P>
+<BIG>Comment: </BIG>Uses current model in the RuleFit home directory.
+<P>
+  <HR>
+<P>
+<BIG><BIG><BIG><A NAME="varimp">varimp:</A></BIG> RuleFit model input variable
+importances</BIG></BIG>
+<P>
+<BIG>Usage:</BIG>
+<P>
+<FONT COLOR="Red">vi </FONT>= varimp (range=NULL, impord=T, x=NULL,
+wt=rep(1,nrow(x)), rth=0, plot=T, horiz=F, cex.names=1, col='grey', donames=T,
+las=2)
+<P>
+<BIG>Optional arguments:</BIG>
+<P>
+<FONT COLOR="Red">range</FONT> = indicies of the range of variables to be
+plotted. If there are 100 input variables, then range=1:20 would plot the
+importances of the first 20 variables, and range=81:100 would plot the
+importances of the last 20. The default plots the first 30 variables.
+<P>
+<FONT COLOR="Red">impord</FONT> = flag specifying order of listing and plotting
+variable importances.<BR>
+<FONT COLOR="Green">impord = TRUE &nbsp;</FONT>=&gt; list and display in
+order of &nbsp;descending variable importance.<BR>
+<FONT COLOR="Green">impord = FALSE&nbsp;</FONT>=&gt; list and display in
+data matrix column order.
+<P>
+<FONT COLOR="Red">x</FONT> = subset of observations over which importances
+are to be computed. Must be a data frame if a data frame was used to construct
+the model in the RuleFit home directory. Otherwise it must be a numeric vector
+or matrix. If missing then all training observations are used.
+<A HREF="#FP 2004">FP 2004</A> (Sec. 7)
+<P>
+<FONT COLOR="Red">wt</FONT> = weights for observations stored in x.<BR>
+If wt is a single valued scalar it is interpreted as a label (number or name)
+referencing a column of x. Otherwise it is a vector of length nrow(x) containing
+the numeric observation weights.
+<P>
+<FONT COLOR="Red">rth</FONT> = rule importance threshold. Variable importances
+are computed only using those rules whose importances are greater than rth
+* (largest rule importance)
+<P>
+<FONT COLOR="Red">plot </FONT>= plotting flag.<FONT COLOR="Green"><BR>
+plot = TRUE / FALSE</FONT> =&gt; do/don't display barplot
+<P>
+<FONT COLOR="Red">horiz </FONT>= horizontal plotting
+flag<FONT COLOR="Green"><BR>
+horiz = TRUE / FALSE</FONT> =&gt; do/don't display barplot horizantally
+<P>
+<FONT COLOR="Red">cex.names</FONT> = expansion factor for variable names
+(bar labels)
+<P>
+<FONT COLOR="Red">col</FONT> = color of &nbsp;barplot
+<P>
+<FONT COLOR="Red">donames</FONT> = &nbsp;barplot variable label flag (horiz
+= F only)<BR>
+<FONT COLOR="Green">donames = TRUE / FALSE</FONT> =&gt; do/don't display
+variable labels on barplot
+<P>
+<FONT COLOR="Red">las</FONT> = label orientation flag (horiz = F only)<BR>
+<FONT COLOR="Green">las =1</FONT> =&gt; horizontal orientation of variable
+labels<BR>
+<FONT COLOR="Green">las =2</FONT> =&gt; vertical orientation of variable
+labels
+<P>
+<BIG>Output:</BIG> list
+<P>
+<FONT COLOR="Red">vi$imp</FONT> = vector of importances for all variables.
+<P>
+<FONT COLOR="Red">vi$ord </FONT>= vector of data matrix column numbers
+corresponding to the elements of vi$imp. vi$imp[k] is the importance of variable
+(column number) vi$ord[k].
+<P>
+<BIG>Examples:</BIG> &nbsp; varimp (); &nbsp;varimp (31:40, impord = F, x=xhigh);
+&nbsp;vi = varimp(plot = F)
+<P>
+<BIG>Comment: </BIG>Uses current model in the RuleFit home directory.
+<P>
+  <HR>
+<P>
+<BIG><BIG><BIG><A NAME="interact">interact:</A></BIG> overall strengths of
+interaction effects for selected variables</BIG></BIG>
+<P>
+<BIG>Usage:</BIG>
+<P>
+<FONT COLOR="Red">int </FONT>= interact (vars, null.mods=NULL, nval=100,
+plot=T, horiz=F,&nbsp;las=2, cex.names=1, col=c("red","yellow"), ymax=NULL)
+<P>
+<BIG>Required argument</BIG>:
+<P>
+<FONT COLOR="Red">vars</FONT> = vector of variable identifiers (column names
+or numbers) specifying selected variables to be considered.
+<P>
+<BIG>Optional arguments:</BIG>
+<P>
+<FONT COLOR="Red">null.mods</FONT> = RuleFit null-model object returned from
+&nbsp;procedure <A HREF="#intnull">intnull</A>. <A HREF="#FP 2004">FP 2004
+</A>(Sec. 8.3)
+<P>
+<FONT COLOR="Red">nval</FONT> = number of evaluation points used for calculation
+(larger values provide higher accuracy with a diminishing return; computation
+grows as nval^2)
+<P>
+<FONT COLOR="Red">plot </FONT>= plotting flag.<FONT COLOR="Green"><BR>
+plot = TRUE / FALSE</FONT> =&gt; do/don't display barplot
+<P>
+<FONT COLOR="Red">horiz </FONT>= horizontal plotting
+flag<FONT COLOR="Green"><BR>
+horiz = TRUE / FALSE</FONT> =&gt; do/don't display barplot horizantally
+<P>
+<FONT COLOR="Red">las</FONT> = label orientation flag<BR>
+<FONT COLOR="Green">las =1</FONT> =&gt; horizontal orientation of variable
+labels<BR>
+<FONT COLOR="Green">las =2</FONT> =&gt; vertical orientation of variable
+labels
+<P>
+<FONT COLOR="Red">cex.names</FONT> = expansion factor for variable names
+(bar labels)
+<P>
+<FONT COLOR="Red">col</FONT> = foreground and background barplot colors.
+If null.mods is missing then interaction strengths are plotted using col[2].
+If null.mods is specified then the null standard deviations are plotted in
+col[1] and the difference between the interaction strengths and their expected
+null values are plotted in col[2]. Note that the col[1] bars are plotted
+over the col[2] bars, so that the absence of a col[2] bar indicates that
+the corresponding interaction strength is less than one standard deviation
+above its expected null value.
+<P>
+<FONT COLOR="Red">ymax </FONT>= specified vertical scale upper limit for
+barplot. If missing then maximum plotted interaction strength&nbsp;value
+is used.
+<P>
+<BIG>Output:</BIG>
+<P>
+<B>If null.mods is missing:</B>
+<P>
+<FONT COLOR="Red">int </FONT>= vector of interaction strengths: int[k] is
+the interaction strength of &nbsp;input variable vars[k]
+<P>
+<B>If null.mods is specified:</B> (list)
+<P>
+<FONT COLOR="Red">int$int</FONT> = vector of interaction strengths: int$int[k]
+is the interaction strength of input variable vars[k]
+<P>
+<FONT COLOR="Red">int$nullave</FONT> = vector of expected null interaction
+strengths: int$nullave[k] is the expected null interaction strength of
+&nbsp;variable vars[k]
+<P>
+<FONT COLOR="Red">int$nullstd</FONT> = vector of null standard deviations:
+int$nullstd[k] is the&nbsp;standard deviation of the&nbsp;null interaction
+strength of &nbsp;variable vars[k]
+<P>
+<BIG>Examples:</BIG>
+<P>
+interact (1:10); &nbsp;interact (vi$ord(1:10), null.mods)<BR>
+int = interact(c("RM", "NOX", "PTRATIO", "LSTAT"), null.bost, ymax=0.4)
+<P>
+<BIG>Comment: </BIG>Uses current model in the RuleFit home directory. See
+<A HREF="#FP 2004">FP 2004</A> (Sec. 9) for illustrations.
+<P>
+  <HR>
+<P>
+<BIG><BIG><BIG><A NAME="twovarint">twovarint:</A></BIG> two-variable interaction
+strengths of a target variable with selected other variables</BIG></BIG>
+<P>
+<BIG>Usage:</BIG>
+<P>
+<FONT COLOR="Red">int2var </FONT>= twovarint (tvar, vars, null.mods=NULL,
+nval=100, import=F, plot=T, horiz=F, las=2, cex.names=1, col=c("red","yellow"),
+ymax=NULL)
+<P>
+<BIG>Required arguments</BIG>:
+<P>
+<FONT COLOR="Red">tvar</FONT> = variable identifier (column name or number)
+specifying the target variable.
+<P>
+<FONT COLOR="Red">vars</FONT> = vector of variable identifiers (column names
+or numbers) specifying other selected variables. Must not contain tvar.
+<P>
+<BIG>Optional arguments:</BIG>
+<P>
+<FONT COLOR="Red">null.mods</FONT> = RuleFit null-model object returned from
+&nbsp;procedure <A HREF="#intnull">intnull</A>. <A HREF="#FP 2004">FP 2004
+</A>(Sec. 8.3)
+<P>
+<FONT COLOR="Red">nval</FONT> = number of evaluation points used for calculation
+(larger values provide higher accuracy with a diminishing return; computation
+grows as nval^2)
+<P>
+<FONT COLOR="Red">import</FONT> = interaction importance flag<BR>
+<FONT COLOR="Green">import= TRUE / FALSE</FONT> =&gt; do/don't scale interaction
+strengths according to their importance to the model. <A HREF="#FP 2004">FP
+2004 </A>(Sec. 8.1)
+<P>
+<FONT COLOR="Red">plot </FONT>= plotting flag.<FONT COLOR="Green"><BR>
+plot = TRUE / FALSE</FONT> =&gt; do/don't display barplot
+<P>
+<FONT COLOR="Red">horiz </FONT>= horizontal plotting
+flag<FONT COLOR="Green"><BR>
+horiz = TRUE / FALSE</FONT> =&gt; do/don't display barplot horizantally
+<P>
+<FONT COLOR="Red">las</FONT> = label orientation flag<BR>
+<FONT COLOR="Green">las =1</FONT> =&gt; horizontal orientation of variable
+labels<BR>
+<FONT COLOR="Green">las =2</FONT> =&gt; vertical orientation of variable
+labels
+<P>
+<FONT COLOR="Red">cex.names</FONT> = expansion factor for variable names
+(bar labels)
+<P>
+<FONT COLOR="Red">col</FONT> = foreground and background barplot colors.
+If null.mods is missing then interaction strengths are plotted using col[2].
+If null.mods is specified then the null standard deviations are plotted in
+col[1] and the difference between the interaction strengths and their expected
+null values are plotted in col[2]. Note that the col[1] bars are plotted
+over the col[2] bars, so that the absence of a col[2] bar indicates that
+the corresponding interaction strength is less than one standard deviation
+above its expected null value.
+<P>
+<FONT COLOR="Red">ymax </FONT>= specified vertical scale upper limit for
+barplot. If missing then maximum plotted interaction strength&nbsp;value
+is used.
+<P>
+<BIG>Output:</BIG>
+<P>
+<B>If null.mods is missing:</B>
+<P>
+<FONT COLOR="Red">int2var </FONT>= vector of interaction strengths: int2var[k]
+is the two-variable interaction strength of tvar with&nbsp;input variable
+vars[k]
+<P>
+<B>If null.mods is specified:</B> (list)
+<P>
+<FONT COLOR="Red">int2var$int</FONT> = vector of interaction strengths:
+int2var$int[k] is the interaction strength of tvar with input variable vars[k]
+<P>
+<FONT COLOR="Red">int2var$nullave</FONT> = vector of expected null interaction
+strengths: int2var$nullave[k] is the expected null interaction strength
+of&nbsp;tvar with&nbsp;variable vars[k]
+<P>
+<FONT COLOR="Red">int2var$nullstd</FONT> = vector of null standard deviations:
+int2var$nullstd[k] is the&nbsp;standard deviation of the&nbsp;null interaction
+strength of tvar with&nbsp;variable vars[k]
+<P>
+<BIG>Examples:</BIG>
+<P>
+twovarint (6, c(1:5,7:13)); &nbsp;int2var = twovarint ("Var 1", c("Var 2",
+"Var 3"), null.mods)<BR>
+int2var= twovarint ("PTRATIO", c("RM", "NOX", "LSTAT"), null.bost, ymax=0.3)
+<P>
+<BIG>Comment: </BIG>Uses current model in the RuleFit home directory. See
+<A HREF="#FP 2004">FP 2004</A> (Sec. 9) for illustrations.
+<P>
+  <HR>
+<P>
+<BIG><BIG><BIG><A NAME="threevarint">threevarint:</A></BIG> three-variable
+interaction strengths of two target variables and selected other
+variables</BIG></BIG>
+<P>
+<BIG>Usage:</BIG>
+<P>
+<FONT COLOR="Red">int3var </FONT>= threevarint (tvar1, tvar2, vars,
+null.mods=NULL, nval=100, import=F, plot=T, horiz=F, las=2, cex.names=1,
+col=c("red","yellow"), ymax=NULL)
+<P>
+<BIG>Required arguments</BIG>:
+<P>
+<FONT COLOR="Red">tvar1</FONT> = variable identifier (column name or number)
+specifying the first target variable.
+<P>
+<FONT COLOR="Red">tvar2</FONT> = variable identifier (column name or number)
+specifying the second target variable. Must be different that tvar1.
+<P>
+<FONT COLOR="Red">vars</FONT> = vector of variable identifiers (column names
+or numbers) specifying other selected variables. Must not contain tvar1 or
+tvar2.
+<P>
+<BIG>Optional arguments:</BIG>
+<P>
+<FONT COLOR="Red">null.mods</FONT> = RuleFit null-model object returned from
+&nbsp;procedure <A HREF="#intnull">intnull</A>. <A HREF="#FP 2004">FP 2004
+</A>(Sec. 8.3)
+<P>
+<FONT COLOR="Red">nval</FONT> = number of evaluation points used for calculation
+(larger values provide higher accuracy with a diminishing return; computation
+grows as nval^2)
+<P>
+<FONT COLOR="Red">import</FONT> = interaction importance flag<BR>
+<FONT COLOR="Green">import= TRUE / FALSE</FONT> =&gt; do/don't scale interaction
+strengths according to their importance to the model. <A HREF="#FP 2004">FP
+2004 </A>(Sec. 8.1)
+<P>
+<FONT COLOR="Red">plot </FONT>= plotting flag.<FONT COLOR="Green"><BR>
+plot = TRUE / FALSE</FONT> =&gt; do/don't display barplot
+<P>
+<FONT COLOR="Red">horiz </FONT>= horizontal plotting
+flag<FONT COLOR="Green"><BR>
+horiz = TRUE / FALSE</FONT> =&gt; do/don't display barplot horizantally
+<P>
+<FONT COLOR="Red">las</FONT> = label orientation flag<BR>
+<FONT COLOR="Green">las =1</FONT> =&gt; horizontal orientation of variable
+labels<BR>
+<FONT COLOR="Green">las =2</FONT> =&gt; vertical orientation of variable
+labels
+<P>
+<FONT COLOR="Red">cex.names</FONT> = expansion factor for variable names
+(bar labels)
+<P>
+<FONT COLOR="Red">col</FONT> = foreground and background barplot colors.
+If null.mods is missing then interaction strengths are plotted using col[2].
+If null.mods is specified then the null standard deviations are plotted in
+col[1] and the difference between the interaction strengths and their expected
+null values are plotted in col[2]. Note that the col[1] bars are plotted
+over the col[2] bars, so that the absence of a col[2] bar indicates that
+the corresponding interaction strength is less than one standard deviation
+above its expected null value.
+<P>
+<FONT COLOR="Red">ymax </FONT>= specified vertical scale upper limit for
+barplot. If missing then maximum plotted interaction strength&nbsp;value
+is used.
+<P>
+<BIG>Output:</BIG>
+<P>
+<B>If null.mods is missing:</B>
+<P>
+<FONT COLOR="Red">int3var </FONT>= vector of interaction strengths: int3var[k]
+is the three-variable interaction strength of tvar1, tvar2, and&nbsp;input
+variable vars[k]
+<P>
+<B>If null.mods is specified:</B> (list)
+<P>
+<FONT COLOR="Red">int3var$int</FONT> = vector of interaction strengths:
+int3var$int[k] is the three-variable interaction strength of tvar1, tvar2,
+and input variable vars[k]
+<P>
+<FONT COLOR="Red">int3var$nullave</FONT> = vector of expected null interaction
+strengths: int3var$nullave[k] is the expected null three-variable interaction
+strength of&nbsp;tvar1, tvar2, and&nbsp;variable vars[k]
+<P>
+<FONT COLOR="Red">int3var$nullstd</FONT> = vector of null standard deviations:
+int3var$nullstd[k] is the&nbsp;standard deviation of the&nbsp;null three-variable
+interaction strength of tvar1, tvar2, and&nbsp;variable vars[k]
+<P>
+<BIG>Examples:</BIG>
+<P>
+threevarint (5,6, c(1:4,7:13)); &nbsp;int3var = threevarint ("Var 1", &nbsp;"Var
+2", c("Var 3", "Var 4"), null.mods)<BR>
+int3var= threevarint ("RM", "PTRATIO", c("DIS", "NOX", "LSTAT"), null.bost,
+ymax=0.2)
+<P>
+<BIG>Comment: </BIG>Uses current model in the RuleFit home directory. See
+<A HREF="#FP 2004">FP 2004</A> (Sec. 9) for illustrations.
+<P>
+  <HR>
+<P>
+<BIG><BIG><BIG><A NAME="intnull">intnull:</A></BIG> compute boostrapped null
+interaction models to calibrate interaction effects</BIG></BIG>
+<P>
+<BIG>Usage:</BIG>
+<P>
+<FONT COLOR="Red">null.models</FONT> = intnull (ntimes=10, null.mods=NULL,
+quiet=F)
+<P>
+<BIG>Optional arguments:</BIG>
+<P>
+<FONT COLOR="Red">ntimes</FONT> = number of null models produced
+<P>
+<FONT COLOR="Red">null.mods</FONT> = RuleFit null-model object previously
+produced by intnull. If missing, a new null-model object is created. If present,
+the new null-models will be added to those contained in the input null model
+object.
+<P>
+<FONT COLOR="Red">quiet </FONT>=
+<FONT COLOR="Black">T/F=&gt;</FONT><FONT COLOR="Green"> </FONT>do/don't surpress
+progress monitor as program executes
+<P>
+<BIG>Output:</BIG>
+<P>
+<FONT COLOR="Red">null.models</FONT> = RuleFit null-model object containing
+the generated &nbsp;bootstrap null models. It can be used as input to
+<A HREF="#interact">interact</A>, <A HREF="#twovarint">twovarint</A>, and
+<A HREF="#threevarint">threevarint</A> to calibrate interaction effects.
+<P>
+<BIG>Examples:</BIG> bost.null= intnull (); &nbsp; bost.null= intnull(5,
+bost.null)
+<P>
+<BIG>Comment: </BIG>Uses current &nbsp;RuleFit model in the RuleFit home
+directory. The produced null-model object can only be used as input to
+<A HREF="#interact">interact</A>, <A HREF="#twovarint">twovarint</A>,
+<A HREF="#threevarint">threevarint</A> or <A HREF="#intnull ">intnull
+</A>&nbsp;when this RuleFit model and its input data are stored in the RuleFit
+home directory (see <A HREF="#rfmodinfo">rfmodinfo</A>
+and&nbsp;<A HREF="#rfrestore">rfrestore</A>). &nbsp;See <A HREF="#FP 2004">FP
+2004</A> (Sec. 8.3).
+<P>
+  <HR>
+<P>
+<BIG><BIG><BIG><A NAME="rfnullinfo">rfnullinfo:</A></BIG> view identifier
+of RuleFit null-model object</BIG></BIG>
+<P>
+<BIG>Usage:</BIG>
+<P>
+rfnullinfo (null.models)
+<P>
+<BIG>Required argument:</BIG>
+<P>
+<FONT COLOR="Red">null.models</FONT> = RuleFit null-model object previously
+produced by <A HREF="#intnull">intnull</A>.
+<P>
+<BIG>Output:</BIG> none
+<P>
+<BIG>Example:</BIG> &nbsp;rfnullinfo (bost.null)
+<P>
+<BIG>Comment: </BIG>prints at the command line the number of bootstrapped
+null interaction models contained in null.mods, and the date and time associated
+with the RuleFit model that was in the RuleFit home directory at the time
+the null-model object was created by <A HREF="#intnull">intnull</A>. It can
+only be used as input to <A HREF="#interact">interact</A>,
+<A HREF="#twovarint">twovarint</A>, <A HREF="#threevarint">threevarint</A>,or
+<A HREF="#intnull ">intnull </A>when this RuleFit model and its input data
+are stored in the RuleFit home directory (see
+<A HREF="#rfmodinfo">rfmodinfo</A> and <A HREF="#rfrestore">rfrestore</A>).
+<P>
+  <HR>
+<P>
+<BIG><BIG><BIG><A NAME="rules">rules:</A></BIG> print RuleFit rules in order
+of importance</BIG></BIG>
+<P>
+<BIG>Usage:</BIG>
+<P>
+rules(beg=1, end=beg+9, x=NULL, wt=rep(1,nrow(x)))
+<P>
+<BIG>Optional arguments:</BIG>
+<P>
+<FONT COLOR="Red">beg </FONT>= first rule to be printed
+<P>
+<FONT COLOR="Red">end </FONT>= last rule to be printed
+<P>
+<FONT COLOR="Red">x</FONT> = subset of observations over which importances
+are to be computed. Must be a data frame if a data frame was used to construct
+the model in the RuleFit home directory. Otherwise it must be a numeric vector
+or matrix. If missing then all training observations are used.
+<A HREF="#FP 2004">FP 2004</A> (Sec. 6)
+<P>
+<FONT COLOR="Red">wt</FONT> = weights for observations stored in x.<BR>
+If wt is a single valued scalar it is interpreted as a label (number or name)
+referencing a column of x. Otherwise it is a vector of length nrow(x) containing
+the numeric observation weights.
+<P>
+<BIG>Output:</BIG> none
+<P>
+<BIG>Examples:</BIG> rules (); &nbsp;rules (11); &nbsp;rules (21, 25); rules
+(x=xhigh)
+<P>
+<BIG>Comment: </BIG>Uses current model in the RuleFit home directory. If
+a referenced variable is of type factor in a data frame used to construct
+the RuleFit model, then its values correspond to the codes underlying the
+factor levels, not the numeric representation of the labels. Otherwise they
+represent the actual values encoded in the input data interpreted as type
+numeric.
+<P>
+  <HR>
+<P>
+<BIG><BIG><BIG><A NAME="singleplot">singleplot:</A></BIG> display single
+variable partial dependence plots</BIG></BIG>
+<P>
+<BIG>Usage:</BIG>
+<P>
+singleplot (vars, qntl=0.025, nval=200, nav=500, catvals=NULL, samescale=F,
+horiz=F,&nbsp;las=2, cex.names=1, col="cyan", denqnt=0.1)
+<P>
+<BIG>Required argument</BIG>:
+<P>
+<FONT COLOR="Red">vars</FONT> = vector of variable identifiers (column names
+or numbers) specifying selected variables to be plotted.
+<P>
+<BIG>Optional arguments:</BIG>
+<P>
+<FONT COLOR="Red">qntl</FONT> = trimming factor for plotting numeric variables.
+Plots are shown for variable values in the range [quantile (qntl) -
+quantile(1-qntl)]. (Ignored for categorical variables (factors).)
+<P>
+<FONT COLOR="Red">nval</FONT> = maximum number of abscissa evaluation points
+for numeric variables. (Ignored for categorical variables (factors).)
+<P>
+<FONT COLOR="Red">nav </FONT>= maximum number of observations used for averaging
+calculations. (larger values provide higher accuracy with a diminishing return;
+computation grows linearly with nav)
+<P>
+<FONT COLOR="Red">catvals</FONT> = vector of names for values (levels) of
+categorical variable (factor). (Ignored for numeric variables or length(vars)
+&gt; 1)
+<P>
+<FONT COLOR="Red">samescale </FONT>= plot vertical scaling flag
+.<FONT COLOR="Green"><BR>
+samescale = TRUE / FALSE</FONT> =&gt; do/don't require same vertical scale
+for all plots.
+<P>
+<FONT COLOR="Red">horiz</FONT> = plot orientation flag for categorical variable
+barplots<BR>
+<FONT COLOR="Green">horiz = T/F </FONT>=&gt; do/don't plot bars horizontally
+<P>
+<FONT COLOR="Red">las</FONT> = label orientation flag for categorical variable
+plots (horiz = F, only)<BR>
+<FONT COLOR="Green">las = 1</FONT> =&gt; horizontal orientation of value
+(level) names stored in catvals (if present)<BR>
+<FONT COLOR="Green">las = 2</FONT> =&gt; vertical orientation of value (level)
+names stored in catvals (if present)
+<P>
+<FONT COLOR="Red">cex.names</FONT> = expansion factor for axis names (bar
+labels) for categorical variable barplots
+<P>
+<FONT COLOR="Red">col</FONT> = color of barplot for categorical variables
+<P>
+<FONT COLOR="Red">denqnt</FONT> = quantile for data density tick marks along
+upper plot boundary &nbsp;for numeric variables ( &lt; 1)<BR>
+<FONT COLOR="Green">denqnt &lt;= 0</FONT> =&gt; no data density tick marks
+displayed
+<P>
+<BIG>Output:</BIG> none
+<P>
+<BIG>Examples:</BIG> singleplot ("DIS"); &nbsp;singleplot (1:5); singleplot(4,
+catvals=levels(boston[[4]]))<BR>
+singleplot(c("CRIM","NOX","RM","PTRATIO","LSTAT"), samescale=T)
+<P>
+<BIG>Comment: </BIG>Uses current model in the RuleFit home directory. Data
+density tick marks for tied quantiles are slightly jittered (one percent
+of plot range). If a categorical variable is of type factor in a data frame
+used to construct the RuleFit model, then its values correspond to the codes
+underlying the factor levels, not the numeric representation of the labels.
+Otherwise they represent the actual values encoded in the input data interpreted
+as type numeric. See <A HREF="#FP 2004">FP 2004</A> (Sec. 8.1).
+<P>
+  <HR>
+<P>
+<BIG><BIG><BIG><A NAME="pairplot">pairplot:</A></BIG> display a two variable
+partial dependence plot</BIG></BIG>
+<P>
+<BIG>Usage:</BIG>
+<P>
+pairplot (var1, var2, type="image", chgvars=F, qntl=0.025, nval=200, nav=500,
+vals1=NULL, vals2=NULL, theta=30, phi=15, col='cyan', horiz=F, las=2,
+cex.names=1)
+<P>
+<BIG>Required arguments:</BIG>
+<P>
+<FONT COLOR="Red">var1</FONT>= variable identifier (column name or number)
+specifying one of the variables to be plotted.
+<P>
+<FONT COLOR="Red">var2</FONT>= variable identifier (column name or number)
+specifying the other variable to be plotted. Must not be the same as as var1.
+<P>
+<BIG>Optional arguments:</BIG>
+<P>
+<FONT COLOR="Red">type</FONT> = flag for type of plot when both var1 and
+var2 are numeric<FONT COLOR="Green"><BR>
+type = "image" </FONT>=&gt; heat map plot<BR>
+<FONT COLOR="Green">type = "persp" </FONT>=&gt; perspective mesh plot<BR>
+<FONT COLOR="Green">type = "contour" </FONT>=&gt; contour plot
+<P>
+<FONT COLOR="Red">chgvars</FONT> = flag for changing plotting relationship
+when both var1 and var2 are categorical (factors)<BR>
+<FONT COLOR="Green">chgvars = FALSE </FONT>=&gt; plot the partial dependence
+on the variable (factor) with the most values (levels), for each of the
+&nbsp;respective values (levels) of the other variable (factor) <BR>
+<FONT COLOR="Green">chgvars = TRUE </FONT>=&gt; reverse this relationship
+<P>
+<FONT COLOR="Red">qntl</FONT> = trimming factor for plotting numeric variables.
+Plots are shown for variable values in the range [quantile (qntl) -
+quantile(1-qntl)]. (Ignored for categorical variables (factors).)
+<P>
+<FONT COLOR="Red">nval</FONT> = maximum number of evaluation points for numeric
+variables. (Ignored for categorical variables).
+<P>
+<FONT COLOR="Red">nav </FONT>= maximum number of observations used for averaging
+calculations. (larger values provide higher accuracy with a diminishing return;
+computation grows linearly with nav)
+<P>
+<FONT COLOR="Red">vals1</FONT> = vector of names for values&nbsp;(levels)
+of var1 if it is categorical (factor). (Ignored if var1 is numeric)
+<P>
+<FONT COLOR="Red">vals2</FONT> = vector of names for values&nbsp;(levels)
+of var2 if it is categorical (factor). (Ignored if var2 is numeric)
+<P>
+<FONT COLOR="Red">theta, phi&nbsp;</FONT>= angles defining the viewing direction
+for perspective mesh plot. theta gives the azimuthal direction and phi the
+colatitude. (Ignored unless both var1 and var2 are numeric and type = "persp")
+<P>
+<FONT COLOR="Red">col </FONT>= color of barplots for two categorical variables
+(factors) or perspective mesh plot for two numeric variables.
+<P>
+<FONT COLOR="Red">horiz</FONT> = plot orientation for categorical variable
+barplots<BR>
+<FONT COLOR="Green">horiz = T/F </FONT>=&gt; do/don't plot bars horizontally
+<P>
+<FONT COLOR="Red">las</FONT> = label orientation flag for categorical variable
+plots (horiz = F, only)<BR>
+<FONT COLOR="Green">las =1</FONT> =&gt; horizontal orientation of value (level)
+names stored in vals1 and/or vals2 (if present).<BR>
+<FONT COLOR="Green">las =2</FONT> =&gt; vertical orientation of value (level)
+names stored in vals1 and/or vals2 (if present).
+<P>
+<FONT COLOR="Red">cex.names</FONT> = expansion factor for axis names (bar
+labels) &nbsp;for categorical variable barplots
+<P>
+<BIG>Output:</BIG> none
+<P>
+<BIG>Examples:</BIG> pairplot ("NOX", "RM"); &nbsp;pairplot (1,5,
+type="persp");<BR>
+pairplot ("SEX", "DOMICILE", vals1=c("MALE", "FEMALE"), vals2=c("HOUSE",
+"CONDO", "TRAILER"))<BR>
+pairplot(3, 14, vals2=levels(x[[14]])); pairplot(7, 14, vals1=levels(x[[7]]),
+vals2=levels(x[[14]]))
+<P>
+<BIG>Comment: </BIG>Uses current model in the RuleFit home directory. If
+a categorical variable is of type factor in a data frame used to construct
+the RuleFit model, then its values correspond to the codes underlying the
+factor levels, not the numeric representation of the labels. Otherwise they
+represent the actual values encoded in the input data interpreted as type
+numeric.
+<P>
+  <HR>
+<P>
+<BIG><BIG><BIG><A NAME="rfversion">rfversion:</A></BIG> print date and version
+number of current RuleFit installation</BIG></BIG>
+<P>
+<BIG>Usage:</BIG>
+<P>
+rfversion ()
+<P>
+<BIG>arguments:</BIG> none
+<P>
+<BIG>Output:</BIG> none
+<P>
+<BIG>Example: </BIG>rfversion ()
+<P>
+  <HR>
+<P>
+www@stat.stanford.edu
+</BODY></HTML>

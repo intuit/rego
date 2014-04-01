@@ -1,0 +1,10 @@
+carat,1
+cut,2
+color,2
+clarity,2
+depth,1
+table,1
+price,1
+x,1
+y,1
+z,1
