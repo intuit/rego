@@ -10,11 +10,13 @@ The CSV and RData files were created in R as follows:
 
 CSV:
     $REGO_HOME/bin/trainModel.sh --d=data_csv.conf --m=model.conf    # training
-    $REGO_HOME/bin/runModel.sh  --m=/tmp/REgo/Diamonds_wd/export --d=predict_csv.conf   # prediction
+    $REGO_HOME/bin/runModel.sh  --m=/tmp/REgo/Diamonds_wd/export --d=predict_csv.conf   # prediction on csv data file
+    $REGO_HOME/bin/exportModel.sh --m=/tmp/REgo/Diamonds_wd/export --c=$REGO_HOME/conf/EXPORT.conf   # export model to SQL
+    $REGO_HOME/bin/runModelSQL.sh --host=  --dbIn=  --tblIn=diamond_test --pk=id --model=rules_forSQL.txt --sql=HiveQL --typeOut=1  # prediction on db table
     
 RData:
     $REGO_HOME/bin/trainModel.sh --d=data_rdata.conf --m=model.conf   # training
-    $REGO_HOME/bin/runModel.sh  --m=/tmp/REgo/Diamonds_wd/export --d=predict_rdata.conf   # prediction
+    $REGO_HOME/bin/runModel.sh  --m=/tmp/REgo/Diamonds_wd/export --d=predict_rdata.conf   # prediction or RData data file
 
 
 *WARNING*:
