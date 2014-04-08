@@ -4,7 +4,7 @@ Before using Rego, you must download the [RuleFit](http://statweb.stanford.edu/~
 
 ## Windows (64-bit)
 
-Place the following file in ```{rego.home}/lib/RuleFit/windows/```
+Place the following files in ```{rego.home}/lib/RuleFit/windows/```
 
 * [rf_go.exe for Windows](http://statweb.stanford.edu/~jhf/r-rulefit/rulefit3/windows/windows64/rf_go.exe)
 * [move.bat](http://statweb.stanford.edu/~jhf/r-rulefit/rulefit3/windows/move.bat)
