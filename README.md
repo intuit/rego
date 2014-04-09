@@ -5,7 +5,7 @@ Rego provides a command-line batch interface to the RuleFit statistical model bu
 http://statweb.stanford.edu/~jhf/R_RuleFit.html), an interpretable type of ensemble model where the base-learners consists of conjunctive rules derived from decision trees.
 
 ## What is Rego?
-----------------
+
 Predictive learning plays an important role in many areas of science, finance and industry. Here are some examples of learning problems:
 
 * Predict whether a customer would be attracted to a new service offering. Recognizing such customers can reduce the cost of a campaign by reducing the number of contacts.
@@ -47,7 +47,7 @@ Rego consists of additional R code that we've written to make working with RuleF
 
 
 ## Getting Started
-------------------
+
 ### Dependencies
 
 Install [R](http://cran.us.r-project.org/) and the following R packages: R2HTML, ROCR, RODBC, getopt
@@ -60,8 +60,6 @@ Install [R](http://cran.us.r-project.org/) and the following R packages: R2HTML,
 ### RuleFit binaries
 
 Before using Rego, you must download the [RuleFit](http://statweb.stanford.edu/~jhf/R_RuleFit.html) binary appropriate to your platform:
-
-Follow the instructions in the ```$REGO_HOME/lib/README.md``` file to install the RuleFit binaries. Additional documentation can be found at the [RuleFit homepage](http://statweb.stanford.edu/~jhf/R_RuleFit.html)
 
 #### Windows (64-bit)
 
@@ -86,9 +84,7 @@ Place the following file in ```$REGO_HOME/lib/RuleFit/mac/```
 
 Run ```chmod u+x $REGO_HOME/lib/RuleFit/mac/rf_go.exe``` to make the file executable.
 
-
 ## Commands
------------
 
 ### Build a model
 
@@ -168,7 +164,6 @@ If using RData as the data source type for either training or prediction, then i
 
 
 ## Project Details
-------------------
 
 * *Author*: Giovanni Seni
 * *Maintainer*: Giovanni Seni <Giovanni_Seni@intuit.com>
