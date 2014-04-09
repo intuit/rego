@@ -1,8 +1,16 @@
 Rego (Rule Ensembles Go!)
 =========================
 
-Rego provides a command-line batch interface to the RuleFit statistical model building program. RuleFit refers to Professor Jerome Friedman's implementation of [Rule Ensembles](
-http://statweb.stanford.edu/~jhf/R_RuleFit.html), an interpretable type of ensemble model where the base-learners consists of conjunctive rules derived from decision trees.
+Rego provides a command-line batch interface to the [RuleFit](http://statweb.stanford.edu/~jhf/R_RuleFit.html) statistical model building program, making it possible to:
+
+* Declaratively train and run a model using ensemble methods
+* Export a model as production-ready SQL (for MySQL, SQLServer, Hive, and Netezza)
+* Incorporate best practices for data pre-processing and model interpretation
+* Provide a detailed, human-readable model explanation in HTML
+
+Rego uses RuleFit, Professor Jerome Friedman's implementation of Rule Ensembles, an interpretable type of ensemble model where the base-learners consists of conjunctive rules derived from decision trees.
+
+Rego is sponsored by [Intuit, Inc](http://intuit.com), and developed and maintained in Intuit's Data Enginering and Analytics group (IDEA) by Dr. Giovanni Seni.
 
 ## What is Rego?
 
@@ -165,6 +173,6 @@ If using RData as the data source type for either training or prediction, then i
 
 ## Project Details
 
-* *Author*: Giovanni Seni
-* *Maintainer*: Giovanni Seni <Giovanni_Seni@intuit.com>
-* *License*: EPL (Eclipse Public License)
+* Author: Giovanni Seni
+* Maintainer: Giovanni Seni <Giovanni_Seni@intuit.com>
+* License: Eclipse Public License 1.0
