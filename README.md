@@ -171,10 +171,3 @@ RData:
 #### Warning!
 
 If using RData as the data source type for either training or prediction, then it must be used for both. This is because the order of factor levels may be different for the two source types.
-
-
-## Project Details
-
-* Author: Giovanni Seni
-* Maintainer: Giovanni Seni <Giovanni_Seni@intuit.com>
-* License: Eclipse Public License 1.0
