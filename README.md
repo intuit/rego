@@ -12,6 +12,8 @@ Rego uses RuleFit, Professor Jerome Friedman's implementation of Rule Ensembles,
 
 Rego is sponsored by [Intuit, Inc](http://intuit.com), and developed and maintained in Intuit's Data Enginering and Analytics group (IDEA) by Dr. Giovanni Seni.
 
+Rego is released as open source under the Eclipse Public License - v 1.0.
+
 ## What is Rego?
 
 Predictive learning plays an important role in many areas of science, finance and industry. Here are some examples of learning problems:
