@@ -56,16 +56,16 @@ Rego consists of additional R code that we've written to make working with RuleF
 
 ## Getting Started
 
-### Dependencies
+### 1. Dependencies
 
 Install [R](http://cran.us.r-project.org/) and the following R packages: R2HTML, ROCR, RODBC, getopt
 
-### Environment variables
+### 2. Environment variables
 
 * ```REGO_HOME```: environment variable pointing to where you have checked out the Rego code
 * ```RF_HOME```: environment variable pointing to appropriate RuleFit executable -- e.g., export ```RF_HOME=$REGO_HOME/lib/mac```
 
-### RuleFit binaries
+### 3. RuleFit binaries
 
 Before using Rego, you must download the [RuleFit](http://statweb.stanford.edu/~jhf/R_RuleFit.html) binary appropriate to your platform:
 
