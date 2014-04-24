@@ -73,6 +73,10 @@ IntiRFContext <- function(conf.fname)
     # Try to get parameter from the env
     conf$rf.working.dir <- Sys.getenv("RF_WORKING_DIR")
   }
+  if (substr(conf$rf.working.dir, 1, 2) == "./") {
+    # Avoid relative paths
+    conf$rf.working.dir <- file.path(getwd(), conf$rf.working.dir)
+  }
   if (file.access(conf$rf.working.dir) != 0) {
     error(logger, paste("You need to specify a valid RF working dir...", conf$rf.working.dir, "isn't good"))
   } else {
