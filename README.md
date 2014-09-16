@@ -135,6 +135,13 @@ Run ```chmod u+x $REGO_HOME/lib/RuleFit/mac/rf_go.exe``` to make the file execut
 * Output:
     * ```dbOut.tblOut```: Computed scores
 
+### Create Partial Dependence Plot (under construction)
+
+* ```$REGO_HOME/rfPardep_main.R -c PARDEP.conf ```
+* Input
+    * ```PARDEP.conf```: specifies variable to be plotted and partial dependence options
+* Output:
+    * PNG file with partial dependence graph
 
 ## Examples
 
