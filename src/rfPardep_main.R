@@ -87,6 +87,13 @@ ValidateConfigArgs <- function(conf)
   } else {
     conf$show.pdep.dist <- (as.numeric(conf$show.pdep.dist) == 1)
   }
+
+  ## Show partial dependence mean
+  if (!("show.yhat.mean" %in% names(conf))) {
+    conf$show.yhat.mean <- FALSE
+  } else {
+    conf$show.yhat.mean <- (as.numeric(conf$show.yhat.mean) == 1)
+  }
   
   ## This determines how far the whiskers of a categorical variable extend out from 
   ## the boxplot's box (this value times interquartile range gives whiskers range)
@@ -155,7 +162,8 @@ ValidateCmdArgs <- function(opt, args.m)
 }
 
 SinglePlot <- function(var, x, max.var.vals=40, sample.size=500, qntl=0.025, rugqnt=0.1, main="",
-                       var.levels=NULL, var.boxplot.range=1.0e-4, var.levels.las=1, show.pdep.dist=FALSE)
+                       var.levels=NULL, var.boxplot.range=1.0e-4, var.levels.las=1, show.pdep.dist=FALSE,
+                       show.yhat.mean=FALSE)
 {
   # Generates single variable partial dependence plot.
   #
@@ -170,6 +178,7 @@ SinglePlot <- function(var, x, max.var.vals=40, sample.size=500, qntl=0.025, rug
   # var.boxplot.range: 'range' parameter to boxplot
   #    var.levels.las: orientation of var level names (if var is categorical)
   #    show.pdep.dist: show partial dependence distribution
+  #    show.yhat.mean: show line indicating avg(yHat)
   
   ## Get evaluation points
   if (is.factor(x[,var]) || length(var.levels) > 0) {
@@ -206,8 +215,9 @@ SinglePlot <- function(var, x, max.var.vals=40, sample.size=500, qntl=0.025, rug
               width=bar.widths, xlab=var, ylab='Partial dependence',
               outline=FALSE, range=var.boxplot.range)
       points(1:num.var.vals, par.dep, col='blue') ## indicate averages
-      if (show..dist) {
-      lines(c(0, ncol(y.hat.m)+1), c(mean.y.hat, mean.y.hat), col='blue', lty=3)
+      if (show.yhat.mean) {
+        lines(c(0, ncol(y.hat.m)+1), c(mean.y.hat, mean.y.hat), col='blue', lty=3)
+      }
     } else {
       barplot(par.dep, names=switch(length(var.levels)>0, var.levels, as.character(var.vals)), 
              width=bar.widths, xlab=var, ylab='Partial dependence', cex.names=0.75, las=var.levels.las)
@@ -224,7 +234,9 @@ SinglePlot <- function(var, x, max.var.vals=40, sample.size=500, qntl=0.025, rug
       plot(c(min(var.vals), max(var.vals)), c(0,0), ylim=c(ymin, ymax), xlab=var, ylab='Partial dependence', 
            type='l', lty=3, col='white')
       matlines(var.vals, t(var.vals.bp$stats), lty=c(3,2,1,2,3), col=c('black','black','red','black','black'))
-      lines(c(0, max(var.vals)), c(mean.y.hat, mean.y.hat), col='blue', lty=3)
+      if (show.yhat.mean) {
+        lines(c(0, max(var.vals)), c(mean.y.hat, mean.y.hat), col='blue', lty=3)
+      }
     } else {
       ymin <- min(par.dep)
       ymax <- max(par.dep)
@@ -292,7 +304,8 @@ png(file = file.path(conf$out.path, conf$out.fname), width = kPlotWidth, height 
 SinglePlot(conf$var.name, mod$x, var.levels = var.levels, var.levels.las = conf$var.levels.las,
            max.var.vals = conf$var.num.values, sample.size = conf$num.obs,
            qntl = conf$var.trim.qntl, rugqnt = conf$var.rug.qntl,
-           show.pdep.dist = conf$show.pdep.dist, var.boxplot.range = conf$var.boxplot.range)
+           show.pdep.dist = conf$show.pdep.dist, var.boxplot.range = conf$var.boxplot.range,
+           show.yhat.mean = conf$show.yhat.mean)
 dev.off()
 
 q(status=0)

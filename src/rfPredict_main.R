@@ -26,6 +26,7 @@ source(file.path(REGO_HOME, "/src/rfExport.R"))
 source(file.path(REGO_HOME, "/src/rfTrain.R"))
 source(file.path(REGO_HOME, "/lib/RuleFit/rulefit.r"))
 source(file.path(REGO_HOME, "/src/rfGraphics.R"))
+source(file.path(REGO_HOME, "/src/rfRulesIO.R"))
 library(ROCR, verbose = FALSE, quietly=TRUE, warn.conflicts = FALSE)
 library(getopt)
 
@@ -115,6 +116,48 @@ ValidateCmdArgs <- function(opt, args.m)
   return(conf)
 }
 
+CheckFactorsEncoding  <- function(x.test, x.train.levels, x.train.levels.lowcount = NA)
+{
+  # Check that the integer codes given to factors in x.test are the same as the ordering
+  # used when the model was built. Otherwise, when the RuleFit::rfpred() function casts  
+  # the data frame to matrix, a different ordering would lead to incorrect predictions.
+  #
+  # Args:
+  #                  x.test : data frame
+  #          x.train.levels : {<var.name, low count levels>} list
+  # x.train.levels.lowcount : {<var.name, low count levels>} df (if exists)
+  # Returns:
+  #      A copy of the given test data frame with transformed columns
+  for (iVar in 1:length(x.train.levels)) {
+    var.levels.train <- x.train.levels[[iVar]]$levels
+    # Was iVar a factor at train time? 
+    if (!(is.null(var.levels.train))) {
+      factor.name <- x.train.levels[[iVar]]$var
+      factor.vals <- as.character(x.test[, factor.name])
+      
+      # Were there low-count levels at train time? If so, replace them in x.test too
+      i.recoded.var <- grep(paste("^", factor.name, "$", sep=""), x.train.levels.lowcount$var, perl=T)
+      if (length(i.recoded.var) > 0) {
+        warn(logger, paste("CheckFactorsEncoding: replacing low-count levels for '", factor.name))
+        low.count.levels <- unlist(x.train.levels.lowcount$levels[i.recoded.var])
+        factor.vals <- ifelse(factor.vals %in% low.count.levels, kLowCountLevelsName, factor.vals)
+      }
+      
+      # Check for presence of new levels and replace them with NA (if any)
+      levels.diff <- setdiff(unique(factor.vals), var.levels.train)
+      if (length(levels.diff) > 0) {
+        warn(logger, paste("CheckFactorsEncoding: new levels found for '", factor.name, "' : ", 
+                           paste(lapply(levels.diff, sQuote), collapse=","),
+                           "; replacing with NA"))
+        factor.vals <- ifelse(factor.vals %in% levels.diff, NA, factor.vals)
+      }
+      
+      # Lastly, make sure we have the same level ordering
+      x.test[, factor.name] <- factor(factor.vals, levels = var.levels.train)
+    }
+  }
+  return(x.test)
+}
 
 ##############
 ## Main
@@ -189,6 +232,19 @@ tryCatch(x.test <- data[,colnames(mod$x)], error = function(err){ok <<- 0})
 if (ok == 0) {
   error(logger, "rfPredict_main.R: train/test column mismatch")
 } 
+
+# Any preprocessing needed?
+# ... Ensure factor levels are encoded in the same order used at model building time
+# ... and substitute low-count levels (if appropriate)
+x.levels.fname <- file.path(conf$model.path, kMod.x.levels.fname)
+x.levels <- ReadLevels(x.levels.fname)
+x.levels.lowcount.fname <- file.path(conf$model.path, kMod.x.levels.lowcount.fname)
+if (file.exists(x.levels.lowcount.fname)) {
+  x.levels.lowcount <- as.data.frame(do.call("rbind", ReadLevels(x.levels.lowcount.fname)))
+  x.test <- CheckFactorsEncoding(x.test, x.levels, x.levels.lowcount)
+} else {
+  x.test <- CheckFactorsEncoding(x.test, x.levels)
+}
 
 # Predict
 y.hat <- rfpred(x.test)
