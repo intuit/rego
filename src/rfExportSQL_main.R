@@ -48,11 +48,15 @@ ValidateConfigArgs <- function(conf)
     conf$do.dedup <- (as.numeric(conf$do.dedup) == 1)
   }
   
-  # Do we need to expand low-count levels?
-  if (is.null(conf$expand.lcl)) {
-    conf$expand.lcl <- FALSE
+  # How do we expand low-count levels?
+  #  1: replace _LowCountLevels_ in SQL scoring expression with corresponding levels
+  #  2: keep _LowCountLevels_ in SQL scoring expression (keeps it shorter, easier to read)
+  #     and generate an extra sql clause with logic to substitute low count levels with
+  #     _LowCountLevels_ in a data preparation step prior to scoring
+  if (is.null(conf$expand.lcl.mode)) {
+    conf$expand.lcl.mode <- 1
   } else {
-    conf$expand.lcl <- (as.numeric(conf$expand.lcl) == 1)
+    conf$expand.lcl.mode <- as.numeric(conf$expand.lcl.mode)
   }
   
   # log level?
@@ -71,8 +75,8 @@ ValidateConfigArgs <- function(conf)
   }
 
   # Max sql expression length (in number of characters)
-  if (is.null(conf$max.sqle.length)) {
-    conf$max.sqle.length <- 500
+  if (is.null(conf$max.sql.length)) {
+    conf$max.sql.length <- 500
   }
 
   # Levels file?
@@ -149,12 +153,12 @@ conf <- ValidateCmdArgs(opt, args.m)
 # Create logging object
 logger <- new("logger", log.level = conf$log.level, file.name = conf$log.fname)
 info(logger, paste("rfExportSQL_main args:", 'model.path =', conf$model.path, ', do.dedup =', conf$do.dedup,
-                   ', expand.lcl =', conf$expand.lcl, ', sql =', conf$sql.dialect, ', log.level =', conf$log.level,  
-                   ', out.type =', conf$out.type, ', out.fname =', conf$out.fname, ', max.sqle.length =', conf$max.sqle.length))
+                   ', expand.lcl.mode =', conf$expand.lcl.mode, ', sql =', conf$sql.dialect, ', log.level =', conf$log.level,  
+                   ', out.type =', conf$out.type, ', out.fname =', conf$out.fname, ', max.sql.length =', conf$max.sql.length))
 
 # Run export
-ExportModel2SQL(conf$model.path, merge.dups = conf$do.dedup, expand.low.count.levels = conf$expand.lcl, 
+ExportModel2SQL(conf$model.path, merge.dups = conf$do.dedup, expand.lcl.mode = conf$expand.lcl.mode, 
                 db.type = conf$sql.dialect, export.type = conf$out.type, levels.fname = conf$levels.fname, out.fname = conf$out.fname,
-                max.sqle.length = conf$max.sqle.length)
+                max.sql.length = conf$max.sql.length)
 
 q(status=0)
