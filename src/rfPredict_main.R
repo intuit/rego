@@ -136,13 +136,14 @@ CheckFactorsEncoding  <- function(x.test, x.train.levels, x.train.levels.lowcoun
       factor.vals <- as.character(x.test[, factor.name])
       
       # Were there low-count levels at train time? If so, replace them in x.test too
-      i.recoded.var <- grep(paste("^", factor.name, "$", sep=""), x.train.levels.lowcount$var, perl=T)
-      if (length(i.recoded.var) > 0) {
-        warn(logger, paste("CheckFactorsEncoding: replacing low-count levels for '", factor.name))
-        low.count.levels <- unlist(x.train.levels.lowcount$levels[i.recoded.var])
-        factor.vals <- ifelse(factor.vals %in% low.count.levels, kLowCountLevelsName, factor.vals)
+      if (!is.na(x.train.levels.lowcount)) {
+        i.recoded.var <- grep(paste("^", factor.name, "$", sep=""), x.train.levels.lowcount$var, perl=T)
+        if (length(i.recoded.var) > 0) {
+          warn(logger, paste("CheckFactorsEncoding: replacing low-count levels for '", factor.name))
+          low.count.levels <- unlist(x.train.levels.lowcount$levels[i.recoded.var])
+          factor.vals <- ifelse(factor.vals %in% low.count.levels, kLowCountLevelsName, factor.vals)
+        }
       }
-      
       # Check for presence of new levels and replace them with NA (if any)
       levels.diff <- setdiff(unique(factor.vals), var.levels.train)
       if (length(levels.diff) > 0) {
