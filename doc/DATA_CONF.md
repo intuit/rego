@@ -20,11 +20,12 @@
 | ## Column specs| |
 | col.types.fname | a text file with **column name, column type** pairs (column type is **1** for continuous, and **2** for categorical variables). Can be omitted if the data source type is **rdata**, in which case columns inheriting from factor will be treated as categorical|
 | col.y | name of response variable.|
-| col.weights | name of weights column (if any). |
-| col.skip.fname| name of text file listing columns to skip (like a row-id column); one column name per line.|
-| col.winz.fname|  text file with column-specific winsorizing parameters.|
+| col.id | name of row-id column (optional). Often useful during prediction when <id, y, yHat> tuples are generated. |
+| col.weights | name of weights column (optional). |
+| col.skip.fname| name of text file listing columns to skip (like a row-id column); one column name per line (optional)|
+| col.winz.fname|  text file with column-specific [winsorizing](http://en.wikipedia.org/wiki/Winsorising) parameters (optional).|
 | ## Any preprocessing| |
-| na.threshold | maximum fraction of NA values to allow per column.|
+| na.threshold | maximum fraction of NA values to allow per column (optional).|
 | min.level.count | levels with fewer than this count will be merged.|
 | do.class.balancing| set to 1 to have classes to be equally weighted; 0 otherwise.|
 | ## HTML model report| |
