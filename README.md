@@ -28,7 +28,6 @@ Rego is a collection of R-based scripts intended to facilitate the process of bu
 * Increase self-service capability
 * Support easy model deployment into a production environment
 
-
 Under the hood Rego uses [RuleFit](http://statweb.stanford.edu/~jhf/R_RuleFit.html), a statistical model building program created by Prof. Jerome Friedman. RuleFit was written in Fortran but has an R interface. RuleFit implements a model building methodology known as ["ensembling"](http://www.amazon.com/Ensemble-Methods-Data-Mining-Predictions/dp/1608452840), where multiple simple models (base learners) are combined into one usually more accurate than the best of its components. This type of model can be described as an additive expansion of the form:
 
 F(x) = a<sub>0</sub> + a<sub>1</sub>*b<sub>1</sub>(x) + a<sub>2</sub>*b<sub>2</sub>(x) + ... + a<sub>M</sub>*b<sub>M</sub>(x) where the b<sub>j</sub>(x)'s are the base-learners.
@@ -100,8 +99,8 @@ Run ```chmod u+x $REGO_HOME/lib/RuleFit/mac/rf_go.exe``` to make the file execut
 
 * ```$REGO_HOME/bin/trainModel.sh --d=DATA.conf --m=MODEL.conf [--l LOG.txt]```
 * Input:
-    * ```DATA.conf```: data configuration file specifying options such as where the data is coming from, what column corresponds to the target, etc.
-    * ```MODEL.conf```: model configuration file specifying options such as the type of model being fit, the criteria being optimized, etc.
+    * ```DATA.conf```: [data configuration file](http://github.com/intuit/rego/blob/master/doc/DATA_CONF.md) specifying options such as where the data is coming from, what column corresponds to the target, etc.
+    * ```MODEL.conf```: [model configuration file](http://github.com/intuit/rego/blob/master/doc/MODEL_CONF.md) specifying options such as the type of model being fit, the criteria being optimized, etc.
     * ```LOG.txt```: optional file name where to write logging messages
 * Output:
     * ```model_summary.html```: model summary and assessment
@@ -113,7 +112,7 @@ Run ```chmod u+x $REGO_HOME/lib/RuleFit/mac/rf_go.exe``` to make the file execut
 * ```$REGO_HOME/bin/exportModel.sh --m=MODEL.dir [--c=EXPORT.conf]```
 * Input
     * ```MODEL_DIR```: path to model definition files
-    * ```EXPORT.conf```: the configuration file specifying export options such as desired sql dialect, type of scoring clause, etc.
+    * ```EXPORT.conf```: the [export configuration file](http://github.com/intuit/rego/blob/master/doc/EXPORT_CONF.md) specifying options such as desired sql dialect, type of scoring clause, etc.
 * Output:
     * ```SQL_FILE```: output file name containing model as a SQL expression
 
@@ -122,7 +121,7 @@ Run ```chmod u+x $REGO_HOME/lib/RuleFit/mac/rf_go.exe``` to make the file execut
 * ```$REGO_HOME/bin/runModel.sh --m=MODEL.dir --d=DATA.conf```
 * Input:
     * ```MODEL_DIR```: path to model definition files
-    * ```DATA.conf```: specifies test data location
+    * ```DATA.conf```: [data configuration file](http://github.com/intuit/rego/blob/master/doc/DATA_CONF.md) specifying test data location
 * Output:
     * Text file with ```<id, y, yHat>``` tuples
     
@@ -161,7 +160,7 @@ CSV:
     # prediction on csv data file
     $REGO_HOME/bin/runModel.sh  --m=/tmp/REgo/Diamonds_wd/export --d=predict_csv.conf
     
-    # export model to SQL    $REGO_HOME/bin/exportModel.sh --m=/tmp/REgo/Diamonds_wd/export --c=$REGO_HOME/conf/EXPORT.conf   
+    # export model to SQL   $REGO_HOME/bin/exportModel.sh --m=/tmp/REgo/Diamonds_wd/export --c=$REGO_HOME/conf/EXPORT.conf   
     # prediction on db table
     $REGO_HOME/bin/runModelSQL.sh --host=  --dbIn=  --tblIn=diamond_test --pk=id --model=rules_forSQL.txt --sql=HiveQL --typeOut=1
     
