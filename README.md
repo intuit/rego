@@ -138,7 +138,7 @@ Run ```chmod u+x $REGO_HOME/lib/RuleFit/mac/rf_go.exe``` to make the file execut
 
 * ```$REGO_HOME/rfPardep_main.R -c PARDEP.conf ```
 * Input
-    * ```PARDEP.conf```: specifies variable to be plotted and partial dependence options
+    * ```PARDEP.conf```: [data configuration file](https://github.com/intuit/rego/blob/master/doc/PARDEP_CONF.md) specifying variable to be plotted and partial dependence options
 * Output:
     * PNG file with partial dependence graph
 
