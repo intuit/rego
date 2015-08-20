@@ -143,7 +143,20 @@ set_score_query()
           -- Add index
           CREATE UNIQUE INDEX IX_${OUTTBL}_${PK} ON ${OUTTBL} (${PK})
         "
-    elif [ "$1" = "MySQL" -o "$1" = "HiveQL" ]; then
+    elif [ "$1" = "MySQL" ]; then
+	SCORE_QUERY="
+          CREATE TABLE ${OUTDB}.${OUTTBL} (
+             id INT
+            ,score DOUBLE
+          );
+          INSERT INTO ${OUTDB}.${OUTTBL}
+          SELECT 
+             LIST.${PK}
+            ,${SQLCLAUSE}
+          FROM ${INDB}.${FEATTBL} LIST
+          ;          
+        "
+    elif [ "$1" = "HiveQL" ]; then
 	SCORE_QUERY="
           CREATE TABLE ${OUTDB}.${OUTTBL} (
              id INT
@@ -257,13 +270,25 @@ set_diag_query()
                           END)
           FROM ${OUTDB}..${OUTTBL}
         "
-    elif [ "$1" = "MySQL" -o "$1" = "HiveQL" ]; then
+    elif [ "$1" = "MySQL" ]; then
+	DIAG_QUERY="
+          SELECT 
+             MIN(score) AS MIN
+            ,AVG(score) AS AVG
+            ,MAX(score) AS MAX
+            ,SUM(CASE
+                  WHEN score IS NULL THEN 1
+                  ELSE 0
+                END) AS nNULLs
+          FROM ${OUTDB}.${OUTTBL}      
+        "
+    elif [ "$1" = "HiveQL" ]; then
 	DIAG_QUERY="
           SELECT 
              MIN(score) AS MIN
             ,AVG(CAST(score AS BIGINT)) AS AVG
             ,MAX(score) AS MAX
-            SUM(CASE
+            ,SUM(CASE
                   WHEN score IS NULL THEN 1
                   ELSE 0
                 END) AS nNULLs
@@ -294,8 +319,7 @@ if [ $VERBOSE -ne 100 ]; then
     if [ $SQLTYPE = "SQLServer" ]; then
 	sqlcmd -E -S $HOST -d $OUTDB -Q "${DELETE_QUERY}"
     elif [ $SQLTYPE = "MySQL" ]; then
-	echo "Don't know how to run: "$SQLTYPE
-	exit 1
+	mysql -h $HOST -u $UNAME -p$UPWD -e "${DELETE_QUERY}"
     elif [ $SQLTYPE = "HiveQL" ]; then
 	hive -S -e "${DELETE_QUERY}"
     elif [ $SQLTYPE = "Netezza" ]; then
@@ -346,8 +370,7 @@ if [ $VERBOSE -ne 100 ]; then
         # sqlcmd -E -S $HOST -d $OUTDB -Q "${QUERY}"
 	sqlcmd -E -S $HOST -d $OUTDB -i ${RUNMODEL_TEMP_FILE}
     elif [ $SQLTYPE = "MySQL" ]; then
-	echo "Don't know how to run: "$SQLTYPE
-	exit 1
+	mysql -h $HOST -u $UNAME -p$UPWD < ${RUNMODEL_TEMP_FILE}
     elif [ $SQLTYPE = "HiveQL" ]; then
 	hive -S -f "${RUNMODEL_TEMP_FILE}"
 	exit 1
@@ -368,8 +391,7 @@ if [ $VERBOSE -ge 1 ] && [ $OUTTYPE -eq 1 ]; then
 	if [ $SQLTYPE = "SQLServer" ]; then
 	    sqlcmd -E -S $HOST -d $OUTDB -Q "${DIAG_QUERY}"
 	elif [ $SQLTYPE = "MySQL" ]; then
-	    echo "Don't know how to run: "$SQLTYPE
-	    exit 1
+	    mysql -h $HOST -u $UNAME -p$UPWD -e "${DIAG_QUERY}"
 	elif [ $SQLTYPE = "HiveQL" ]; then
 	    hive -S -e "${DIAG_QUERY}"
 	    exit 1
@@ -390,7 +412,7 @@ if [ $VERBOSE -ne 100 ]; then
     if [ $SQLTYPE = "SQLServer" ]; then
 	nco=`sqlcmd -E -S $HOST -d $OUTDB -Q "SELECT COUNT(*) NumRows FROM ${OUTTBL}" | awk 'NR==3{print $1;}'`
     elif [ $SQLTYPE = "MySQL" ]; then
-	nco="???"
+	nco=`mysql -h $HOST -u $UNAME -p$UPWD -e "SELECT COUNT(*) NumRows FROM ${OUTDB}.${OUTTBL}" | perl -ane '$. > 1 && print'`
     elif [ $SQLTYPE = "HiveQL" ]; then
 	nco=`hive -S -e "SELECT COUNT(*) NumRows FROM ${OUTDB}.${OUTTBL}" | perl -ane '$. > 1 && print'`
     elif [ $SQLTYPE = "Netezza" ]; then
