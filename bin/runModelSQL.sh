@@ -193,7 +193,14 @@ set_rules_only_query()
           CREATE UNIQUE INDEX IX_${OUTTBL}_${PK} ON ${OUTTBL} (${PK})
         "
     elif [ "$1" = "MySQL" ]; then
-	RULES_ONLY_QUERY=""
+	RULES_ONLY_QUERY="
+          CREATE TABLE ${OUTDB}.${OUTTBL} AS
+          SELECT 
+             LIST.${PK}
+            ,${SQLCLAUSE}
+          FROM ${INDB}.${FEATTBL} LIST
+          ;          
+        "
     elif [ "$1" = "Netezza" ]; then
 	RULES_ONLY_QUERY=""
     else
