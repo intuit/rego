@@ -21,8 +21,8 @@ DefaultRFContext <- function()
   rf.ctxt$inter.supp <- 3.0
   rf.ctxt$memory.par <- 0.01
   rf.ctxt$conv.thr   <- 1.0e-3
-  rf.ctxt$tree.store <- 10000000
-  rf.ctxt$cat.store  <- 1000000
+  rf.ctxt$mem.tree.store <- 10000000
+  rf.ctxt$mem.cat.store  <- 1000000
   return(rf.ctxt)
 }
 
@@ -255,8 +255,8 @@ TrainRF <- function(x, y, wt, rf.context, cat.vars=NULL, not.used=NULL)
                              ,memory.par = rf.context$memory.par 
                              ,conv.thr   = rf.context$conv.thr
                              ,quiet      = TRUE
-                             ,tree.store = rf.context$tree.store 
-                             ,cat.store  = rf.context$cat.store),
+                             ,tree.store = rf.context$mem.tree.store 
+                             ,cat.store  = rf.context$mem.cat.store),
              error = function(err){ok <<- 0})
     if (ok == 0) {
       error(logger, "TrainRF: got stuck in rulefit")
@@ -280,8 +280,8 @@ TrainRF <- function(x, y, wt, rf.context, cat.vars=NULL, not.used=NULL)
                              ,memory.par = rf.context$memory.par 
                              ,conv.thr   = rf.context$conv.thr
                              ,quiet      = TRUE
-                             ,tree.store = rf.context$tree.store 
-                             ,cat.store  = rf.context$cat.store),
+                             ,tree.store = rf.context$mem.tree.store 
+                             ,cat.store  = rf.context$mem.cat.store),
              error = function(err){ok <<- 0})
     if (ok == 0) {
       error(logger, "TrainRF: got stuck in rulefit")
