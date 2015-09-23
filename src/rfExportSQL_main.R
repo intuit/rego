@@ -85,6 +85,9 @@ ValidateConfigArgs <- function(conf)
   }
 
   # Output file?
+  if (is.null(conf$out.path)) {
+    conf$out.path <- conf$model_path
+  }
   if (is.null(conf$out.fname)) {
     conf$out.fname <- "rules_forSQL.txt"
   }
@@ -157,8 +160,9 @@ info(logger, paste("rfExportSQL_main args:", 'model.path =', conf$model.path, ',
                    ', out.type =', conf$out.type, ', out.fname =', conf$out.fname, ', max.sql.length =', conf$max.sql.length))
 
 # Run export
-ExportModel2SQL(conf$model.path, merge.dups = conf$do.dedup, expand.lcl.mode = conf$expand.lcl.mode, 
-                db.type = conf$sql.dialect, export.type = conf$out.type, levels.fname = conf$levels.fname, out.fname = conf$out.fname,
+ExportModel2SQL(model.path = conf$model.path, merge.dups = conf$do.dedup, expand.lcl.mode = conf$expand.lcl.mode, 
+                db.type = conf$sql.dialect, export.type = conf$out.type, levels.fname = conf$levels.fname,
+                out.path = conf$out.path, out.fname = conf$out.fname,
                 max.sql.length = conf$max.sql.length)
 
 q(status=0)
