@@ -575,7 +575,7 @@ ExportModel2SQL <- function(model.path, out.path = model.path, levels.fname = "x
   }
   
   # Get SQL-compatible version of terms
-  terms.df <- ConvertTermsToSQL(terms, db.type, x.levels.fname = file.path(model.path, kMod.x.levels.fname),
+  terms.df <- ConvertTermsToSQL(terms, db.type, x.levels.fname = file.path(out.path, kMod.x.levels.fname),
       x.levels.lowcount.fname = ifelse(expand.lcl.mode == 1, file.path(model.path, kMod.x.levels.lowcount.fname), ""),
       x.trims.fname = file.path(model.path, kMod.x.trim.fname))
   
