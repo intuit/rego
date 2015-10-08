@@ -493,7 +493,7 @@ BuildRulesCoeffScoringClause <- function(db.type, n.terms, max.sql.length)
   return(list(score.sum.sql = score.sum.sql, partial.sum.sql = partial.sum.sql))
 }
 
-BuildLCLClause <- function(model.path, levels.fname, out.fname, db.type)
+BuildLCLClause <- function(model.path, levels.fname, out.path, out.fname, db.type)
 {
   # When handling the lowcount levels in the data preparation step, we need to build a a sql clause,   
   # which is like case when var in (level1, level2, ...) then var else '_LowCountLevels_' end as var...
@@ -534,7 +534,7 @@ BuildLCLClause <- function(model.path, levels.fname, out.fname, db.type)
   query = sprintf("%s %s 
   ", varUnchanged, factorChanged)
   
-  cat(query, file=paste(model.path,out.fname_lcl,sep="/"))
+  cat(query, file=paste(out.path, out.fname_lcl, sep="/"))
   }
 }
 
@@ -575,7 +575,7 @@ ExportModel2SQL <- function(model.path, out.path = model.path, levels.fname = "x
   }
   
   # Get SQL-compatible version of terms
-  terms.df <- ConvertTermsToSQL(terms, db.type, x.levels.fname = file.path(out.path, kMod.x.levels.fname),
+  terms.df <- ConvertTermsToSQL(terms, db.type, x.levels.fname = file.path(model.path, kMod.x.levels.fname),
       x.levels.lowcount.fname = ifelse(expand.lcl.mode == 1, file.path(model.path, kMod.x.levels.lowcount.fname), ""),
       x.trims.fname = file.path(model.path, kMod.x.trim.fname))
   
@@ -619,6 +619,6 @@ ExportModel2SQL <- function(model.path, out.path = model.path, levels.fname = "x
 
   # Low-count level expansion needed?
   if (expand.lcl.mode == 2) { 
-    BuildLCLClause(model.path, levels.fname, out.fname, db.type)
+    BuildLCLClause(model.path, levels.fname, out.path, out.fname, db.type)
   }
 }
