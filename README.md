@@ -10,7 +10,8 @@ Rego provides a command-line batch interface to the [RuleFit](http://statweb.sta
 
 Rego uses RuleFit, Stanford Professor Jerome Friedman's implementation of *Rule Ensembles*, an interpretable type of ensemble model where the base-learners consists of conjunctive rules derived from decision trees.
 
-Rego is sponsored by [Intuit, Inc](http://intuit.com), and developed and maintained in Intuit's Data Enginering and Analytics group (IDEA) by Dr. Giovanni Seni.
+Rego is developed and maintained by Dr. Giovanni Seni, and was initially sponsored by the Data Engineering and Analytics group (IDEA) of [Intuit, Inc](http://intuit.com).
+
 
 Rego is released as open source under the Eclipse Public License - v 1.0.
 
