@@ -333,6 +333,19 @@ AppendCoeffSQLWrapper <- function(term, term.sql.head, term.sql.tail)
   return(rule.sql.str)
 }
 
+ApplySQLWrapper <- function(term, term.sql.head, term.sql.tail)
+  # Returns SQL version of rule(x) or x_j 
+{     
+  if (term['type'] == kRuleTypeLinear) {
+    rule.sql.str <- term['def']
+  } else if ( term['type'] == kRuleTypeSplit ) {
+    rule.sql.str <- paste(term.sql.head, "(", term['def'], ")", term.sql.tail, sep="")
+  } else {
+    error(logger, paste("ApplySQLWrapper: unknown rule type: ", type))
+  }
+  return(rule.sql.str)
+}
+  
 BuildScoringClause <- function(terms.sql.df, db.type, c0)
 {
   # Concatenates SQL-like version of model terms into a single scoring expression -- i.e., 
@@ -359,6 +372,31 @@ BuildScoringClause <- function(terms.sql.df, db.type, c0)
   return(score.str)               
 }
 
+BuildScoringClauseNoCoeff <- function(terms.sql.df, db.type)
+{
+  # Like BuildScoringClause() but without the coefficients -- i.e., constructs the SQL that computes
+  # rule1(x) + rule3(x) + ... Primarily used for debugging purposes.
+  #
+  # Args:
+  #   terms.sql.df : data-frame with tuples <type, coeff, def> where def is the term
+  #                  definition already converted into a SQL-compatible string
+  #        db.type : SQL dialect to use
+  # Returns:
+  #        Scoring SQL clause as sum of indicators.
+  stopifnot(class(terms.sql.df) == "data.frame")
+  stopifnot(length(which((names(terms.sql.df) == c("type", "coeff", "def"))==T)) == 3)
+
+  # Set SQL-specific rule "wrapper"
+  term.sql.wrapper <- GetSQLRuleWrapper(db.type)
+  
+  # Append coefficient and SQL wrapper to each term... concatenate all terms with "+"
+  score.str <- paste(apply(terms.sql.df, 1, ApplySQLWrapper, term.sql.wrapper$head, term.sql.wrapper$tail), 
+                     sep = "", collapse = " +\n")
+  # Add 0.0 intercept to scoring string -- just because java model runner expects it
+  score.str <- paste(0.0, score.str, sep = " +\n")
+  return(score.str)               
+}
+
 BuildRulesOnlyClause <- function(terms.sql.df, db.type)
 {
   # Builds a SQL clause for filling the individual table columns t_i, where t_i refers
@@ -375,18 +413,6 @@ BuildRulesOnlyClause <- function(terms.sql.df, db.type)
   stopifnot(class(terms.sql.df) == "data.frame")
   stopifnot(length(which((names(terms.sql.df) == c("type", "coeff", "def"))==T)) == 3)
   stopifnot(db.type %in% c("SQLServer", "MySQL", "Netezza", "HiveQL"))
-  
-  ApplySQLWrapper <- function(term, term.sql.head, term.sql.tail)
-  {     
-    if (term['type'] == kRuleTypeLinear) {
-      rule.sql.str <- term['def']
-    } else if ( term['type'] == kRuleTypeSplit ) {
-      rule.sql.str <- paste(term.sql.head, "(", term['def'], ")", term.sql.tail, sep="")
-    } else {
-      error(logger, paste("ApplySQLWrapper: unknown rule type: ", type))
-    }
-    return(rule.sql.str)
-  }
   
   # Set SQL-specific rule "wrapper"
   term.sql.wrapper <- GetSQLRuleWrapper(db.type)
@@ -552,7 +578,7 @@ ExportModel2SQL <- function(model.path, out.path = model.path, levels.fname = "x
   #       out.fname : ouput file name 
   #      merge.dups : should duplicate terms be "merged"?
   # expand.lcl.mode : how to handle low-count level expansion
-  #     export.type : one of {"score", "rulesonly", "rulescoeff"}
+  #     export.type : one of {"score", "rulesonly", "rulesscore", "rulescoeff"}
   #         db.type : SQL dialect to use
   # max.sql.length : max sql expression length (in number of characters)
   #
@@ -560,7 +586,7 @@ ExportModel2SQL <- function(model.path, out.path = model.path, levels.fname = "x
   #     None.
   stopifnot(is.character(model.path))
   stopifnot(is.character(out.path))
-  stopifnot(export.type %in% c("score", "rulesonly", "rulescoeff"))
+  stopifnot(export.type %in% c("score", "rulesonly", "rulesscore", "rulescoeff"))
   
   # Read model definition -- combination of rules and linear terms
   terms <- ReadRules(file.path(model.path, kMod.rules.fname))
@@ -593,6 +619,9 @@ ExportModel2SQL <- function(model.path, out.path = model.path, levels.fname = "x
   } else if (export.type == "rulesonly") {
     # Build SQL clause that creates one column per term (w/o coeff)
     sql.str <- BuildRulesOnlyClause(terms.df, db.type)
+  } else if (export.type == "rulesscore") {
+    # Build SQL clause that computes score based on adding indicator functions only (wo coeff)
+    sql.str <- BuildScoringClauseNoCoeff(terms.df, db.type)
   } else {
     # Build SQL clause that creates one column per term (w coeff)
     stopifnot(export.type == "rulescoeff")
