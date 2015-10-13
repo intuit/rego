@@ -66,12 +66,11 @@ ValidateConfigArgs <- function(conf)
     conf$log.level <- get(conf$log.level)
   }
 
-  # Output type? 1:scoring clause, 2:rules clause (w/o coeff), 
-  #              3:rules clause (w coeff)
+  # Output type?
   if (is.null(conf$out.type)) {
     conf$out.type <- "score"
   } else {
-    stopifnot(conf$out.type %in% c("score", "rulesonly", "rulescoeff"))
+    stopifnot(conf$out.type %in% c("score", "rulesonly", "rulesscore", "rulescoeff"))
   }
 
   # Max sql expression length (in number of characters)
