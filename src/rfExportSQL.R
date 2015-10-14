@@ -593,11 +593,7 @@ ExportModel2SQL <- function(model.path, out.path = model.path, levels.fname = "x
   
   # Merge "duplicate" terms? (if any)
   if (merge.dups) {
-    if (export.type == "score") {
-      terms <- MergeDuplicateTerms(terms)
-    } else {
-      dbg(logger, "ExportModel2SQL: merge.dups = TRUE only makes sense when export.type = 'score'... ignoring")
-    }
+    terms <- MergeDuplicateTerms(terms)
   }
   
   # Get SQL-compatible version of terms
