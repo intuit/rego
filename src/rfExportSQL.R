@@ -337,9 +337,9 @@ ApplySQLWrapper <- function(term, term.sql.head, term.sql.tail)
   # Returns SQL version of rule(x) or x_j 
 {     
   if (term['type'] == kRuleTypeLinear) {
-    rule.sql.str <- term['def']
+    rule.sql.str <- paste("1.0*", term['def'], sep="")
   } else if ( term['type'] == kRuleTypeSplit ) {
-    rule.sql.str <- paste(term.sql.head, "(", term['def'], ")", term.sql.tail, sep="")
+    rule.sql.str <- paste("1.0*", term.sql.head, "(", term['def'], ")", term.sql.tail, sep="")
   } else {
     error(logger, paste("ApplySQLWrapper: unknown rule type: ", type))
   }
