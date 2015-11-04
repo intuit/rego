@@ -42,7 +42,7 @@ IntiRFContext <- function(conf.fname)
                         "te.interaction.suppress", "te.memory.param", "sparsity.method", 
                         "score.criterion", "crossvalidation.num.folds", "crossvalidation.fold.size", 
                         "misclassification.costs", "data.trim.quantile", "data.NA.value", 
-                        "convergence.threshold", "mem.tree.store", "mem.cat.store")
+                        "convergence.threshold", "mem.tree.store", "mem.cat.store", "elastic.net.param")
   
   rf.ctxt <- DefaultRFContext()
   
@@ -145,14 +145,20 @@ IntiRFContext <- function(conf.fname)
     
   # Regularization (postptocessing) control
   if (!("sparsity.method" %in% names(conf)) |
-      !(conf$sparsity.method %in% c("Lasso", "Lasso+FSR", "FSR"))) {
-    error(logger, "You need to specify a sparsity method: 'Lasso', 'Lasso+FSR' or 'FSR'")
+      !(conf$sparsity.method %in% c("Lasso", "Lasso+FSR", "FSR", "ElasticNet"))) {
+    error(logger, "You need to specify a sparsity method: 'Lasso', 'Lasso+FSR', 'FSR' or 'ElasticNet'")
   } else if (conf$sparsity.method == "Lasso") {
     rf.ctxt$sparse <- 1
   } else if (conf$sparsity.method == "Lasso+FSR") {
     rf.ctxt$sparse <- 2
   } else if (conf$sparsity.method == "FSR") {
     rf.ctxt$sparse <- 3
+  } else if (conf$sparsity.method == "ElasticNet") {
+      if ("elastic.net.param" %in% names(conf)) {
+          rf.ctxt$sparse <- as.numeric(conf$elastic.net.param)
+      } else {
+          error(logger, "For 'ElasticNet' sparsity method, you need to specify 'elastic.net.param'")
+      }
   }
 
   # Model selection
@@ -215,7 +221,7 @@ IntiRFContext <- function(conf.fname)
   if ("mem.cat.store" %in% names(conf)) {
     rf.ctxt$mem.cat.store <- as.numeric(conf$mem.cat.store)
   }
-
+  
   return(rf.ctxt)
 }
 
@@ -257,7 +263,7 @@ TrainRF <- function(x, y, wt, rf.context, cat.vars=NULL, not.used=NULL)
                              ,quiet      = TRUE
                              ,tree.store = rf.context$mem.tree.store 
                              ,cat.store  = rf.context$mem.cat.store),
-             error = function(err){ok <<- 0})
+             error = function(err){ok <<- 0; dbg(logger, paste("Error Message from RuleFit:", err))})
     if (ok == 0) {
       error(logger, "TrainRF: got stuck in rulefit")
     }  
@@ -282,7 +288,7 @@ TrainRF <- function(x, y, wt, rf.context, cat.vars=NULL, not.used=NULL)
                              ,quiet      = TRUE
                              ,tree.store = rf.context$mem.tree.store 
                              ,cat.store  = rf.context$mem.cat.store),
-             error = function(err){ok <<- 0})
+             error = function(err){ok <<- 0; dbg(logger, paste("Error Message from RuleFit:", err))})
     if (ok == 0) {
       error(logger, "TrainRF: got stuck in rulefit")
     }  
