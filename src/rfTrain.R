@@ -86,6 +86,12 @@ TrainModel <- function(data, config, rf.ctxt)
     obs.wt.summary <- summary(as.factor(obs.wt))
     info(logger, "Class weights:")    
     info(logger, paste(names(obs.wt.summary), obs.wt.summary, sep=":", collapse=" "))
+  } else if ("row.weights.fname" %in% names(conf)) {
+    # Customized weights for each row
+    obs.wt <- read.table(conf$row.weights.fname, header = F)[,1]
+    obs.wt.summary <- summary(obs.wt)
+    info(logger, "Row weights (from weight file):")
+    info(logger, paste(names(obs.wt.summary), obs.wt.summary, sep=":", collapse=" "))    
   } else {
     obs.wt <- rep(1, nrow(data))
   }

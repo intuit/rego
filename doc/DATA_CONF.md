@@ -22,6 +22,7 @@
 | col.y | name of response variable.|
 | col.id | name of row-id column (optional). Often useful during prediction when <id, y, yHat> tuples are generated. |
 | col.weights | name of weights column (optional). |
+|row.weights.fname | name of text file with customized weights for each row (no header, one weight per line) |
 | col.skip.fname| name of text file listing columns to skip (like a row-id column); one column name per line (optional)|
 | col.winz.fname|  text file with column-specific [winsorizing](http://en.wikipedia.org/wiki/Winsorising) parameters (optional).|
 | ## Any preprocessing| |
