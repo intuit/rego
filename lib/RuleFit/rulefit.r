@@ -154,7 +154,7 @@ rulefit=function (x,y,wt=rep(1,n),cat.vars=NULL,not.used=NULL,
 
    # If in "batch" mode, Log parameter values
    if (exists("RF_HOME", mode = "character") && exists("RF_WORKING_DIR", mode = "character")) {
-     opt.str <- sprintf("x (dim = %d x %d), y, wt, cat.vars: %s, not.used: %s, xmiss: %e, rfmode: %s, sparse: %d, test.reps: %d, test.fract: %f, mod.sel: %d, model.type: %s, tree.size: %d, max.rules: %d, max.trms: %d, costs: %s, trim.qntl: %f, samp.fract: %f, inter.supp: %f, memory.par: %f, conv.thr: %f, tree.store: %d, cat.store: %d",
+     opt.str <- sprintf("x (dim = %d x %d), y, wt, cat.vars: %s, not.used: %s, xmiss: %e, rfmode: %s, sparse: %.2f, test.reps: %d, test.fract: %f, mod.sel: %d, model.type: %s, tree.size: %d, max.rules: %d, max.trms: %d, costs: %s, trim.qntl: %f, samp.fract: %f, inter.supp: %f, memory.par: %f, conv.thr: %f, tree.store: %d, cat.store: %d",
                       nrow(x), ncol(x),
                       paste(cat.vars, collapse = ","), paste(not.used, collapse = ","),
                       xmiss, rfmode, sparse, test.reps, test.fract, mod.sel, model.type,
