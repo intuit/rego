@@ -142,6 +142,13 @@ ValidateConfigArgs <- function(conf)
     conf$log.level <- get(conf$log.level)
   }
 
+  # Save workspace before training? (for debugging purposes)
+  if (!("save.workspace" %in% names(conf))) {
+    conf$save.workspace <- FALSE
+  } else {
+    conf$save.workspace <- as.logical(as.numeric(conf$save.workspace))
+  }
+
   return(conf)
 }
 

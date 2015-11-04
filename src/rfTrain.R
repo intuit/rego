@@ -139,6 +139,12 @@ TrainModel <- function(data, config, rf.ctxt)
   # Coerce to numeric matrix & mark NAs
   x <- data.matrix(xDF)
   x[is.na(x)] <- 9.0e30
+
+  # Save workspace (before training - mostly for debugging purposes)?
+  if (config$save.workspace) {
+    dbg(logger, "Saving workspace")
+    save(xDF, x, y, obs.wt, rf.ctxt, x.cat.vars, file = file.path(rf.ctxt$export.dir , "workspace.rdata"))
+  }
   
   # Build model
   set.seed(config$rand.seed)
