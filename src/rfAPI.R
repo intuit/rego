@@ -23,17 +23,18 @@ DefaultRFContext <- function()
   rf.ctxt$conv.thr   <- 1.0e-3
   rf.ctxt$mem.tree.store <- 10000000
   rf.ctxt$mem.cat.store  <- 1000000
+  rf.ctxt$quiet <- TRUE 
   return(rf.ctxt)
 }
 
-IntiRFContext <- function(conf.fname)
+InitRFContext <- function(model.conf.fname, data.conf)
 {
   # Parses a given configuration file, and uses it to initialize an RF "context."
   # An "RF Context" is just a verbose version of RuleFit's config param set needed
   # to run it.
   #
   # Args:
-  #   conf.fname: configuration file name
+  #   model.conf.fname: model configuration file name
   #
   # Returns:
   #   A list of <param name, param value> pairs
@@ -47,7 +48,7 @@ IntiRFContext <- function(conf.fname)
   rf.ctxt <- DefaultRFContext()
   
   # Read config file (two columns assumed: 'param' and 'value')
-  tmp <- read.table(conf.fname, header=T, as.is=T)
+  tmp <- read.table(model.conf.fname, header=T, as.is=T)
   conf <- as.list(tmp$value)
   names(conf) <- tmp$param
 
@@ -221,6 +222,9 @@ IntiRFContext <- function(conf.fname)
   if ("mem.cat.store" %in% names(conf)) {
     rf.ctxt$mem.cat.store <- as.numeric(conf$mem.cat.store)
   }
+
+  # Print RF's progress info
+  rf.ctxt$quiet <- ifelse(data.conf$log.level <= kLogLevelDEBUG, FALSE, TRUE)
   
   return(rf.ctxt)
 }
@@ -260,7 +264,7 @@ TrainRF <- function(x, y, wt, rf.context, cat.vars=NULL, not.used=NULL)
                              ,inter.supp = rf.context$inter.supp 
                              ,memory.par = rf.context$memory.par 
                              ,conv.thr   = rf.context$conv.thr
-                             ,quiet      = TRUE
+                             ,quiet      = rf.ctxt$quiet
                              ,tree.store = rf.context$mem.tree.store 
                              ,cat.store  = rf.context$mem.cat.store),
              error = function(err){ok <<- 0; dbg(logger, paste("Error Message from RuleFit:", err))})
@@ -285,7 +289,7 @@ TrainRF <- function(x, y, wt, rf.context, cat.vars=NULL, not.used=NULL)
                              ,inter.supp = rf.context$inter.supp 
                              ,memory.par = rf.context$memory.par 
                              ,conv.thr   = rf.context$conv.thr
-                             ,quiet      = TRUE
+                             ,quiet      = rf.ctxt$quiet
                              ,tree.store = rf.context$mem.tree.store 
                              ,cat.store  = rf.context$mem.cat.store),
              error = function(err){ok <<- 0; dbg(logger, paste("Error Message from RuleFit:", err))})
