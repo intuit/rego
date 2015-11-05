@@ -229,10 +229,10 @@ CopyConfigFiles <- function(conf, rf.ctxt)
   if (ok) {
     ok <- file.copy(from = opt$model_conf, to = file.path(rf.ctxt$working.dir,"configuration"))
   }
-  if (nchar(conf$col.types.fname) > 0 && ok) {
+  if ("col.types.fname" %in% names(conf) && nchar(conf$col.types.fname) > 0 && ok) {
     ok <- file.copy(from = conf$col.types.fname, to = file.path(rf.ctxt$working.dir,"configuration"))
   }
-  if (nchar(conf$col.skip.fname) > 0 && ok) {
+  if ("col.skip.fname" %in% names(conf) && nchar(conf$col.skip.fname) > 0 && ok) {
     ok <- file.copy(from = conf$col.skip.fname, to = file.path(rf.ctxt$working.dir,"configuration"))
   }
   if (ok == 0) {
