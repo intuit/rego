@@ -13,7 +13,8 @@
 | te.interaction.suppress | interaction suppression factor. "Boosts" split scores to favor reusing the same variable along a given (root to node) tree path. This places a preference on fewer variables defining splits along such paths, which will be later converted into rules. This makes it harder for "spurious" interactions to come into the model. These spurious interactions can occur in the presence of high [collinearity](http://en.wikipedia.org/wiki/Multicollinearity) among the input variables.| 
 | te.memory.param | tree ensemble learning rate | 
 | ## *Regularization method* | | 
-| sparsity.method | one of **Lasso**, **Lasso+FSR** (lasso to select variable entry order, followed by a forward stepwise regression), **FSR** (forward stepwise to select variables and fit model) | 
+| sparsity.method | one of **Lasso**, **Lasso+FSR** (lasso to select variable entry order, followed by a forward stepwise regression), **FSR** (forward stepwise to select variables and fit model), **ElasticNet**  | 
+| elastic.net.param | Required when sparsity.method = "ElasticNet"; 0 < alpha < 1. |
 | ## *Model selection* | | 
 | score.criterion | one of **1-AUC**(optimizes 1.0 minus the Area under the ROC Curve),**AAE**(optimizes average absolute error; if (task == *classification*), optimizes average squared-error loss on predicted probabilities),**LS** (optimizes average squared-error), **Misclassification** (optimizes misclassification risk). | 
 | crossvalidation.num.folds | number of test replications used for model selection| 
