@@ -314,7 +314,7 @@ info(logger, paste("Data loaded: dim =", nrow(data), "x", ncol(data), "; NAs =",
                    "%)"))
 
 # Load model specification parameters
-rf.ctxt <- IntiRFContext(opt$model_conf)
+rf.ctxt <- InitRFContext(opt$model_conf, conf)
 
 # Set global env variables required by RuleFit
 platform <- rf.ctxt$platform
