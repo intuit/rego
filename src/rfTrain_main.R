@@ -52,6 +52,11 @@ ValidateConfigArgs <- function(conf)
               "db.type" %in% names(conf) && "db.tbl.name" %in% names(conf))
   } else if (conf$data.source.type == "csv") {
     stopifnot("csv.path" %in% names(conf) && "csv.fname" %in% names(conf))
+    if ("csv.sep" %in% names(conf)) {
+      conf$csv.sep <- as.character(conf$csv.sep)
+    } else {
+      conf$csv.sep <- ","
+    }
   } else {  # rdata
     stopifnot(c("rdata.path", "rdata.fname") %in% names(conf))
   }
@@ -211,6 +216,30 @@ GetSQLQueryTemplate <- function(conf)
   return(sql.query.tmpl)
 }
 
+CopyConfigFiles <- function(conf, rf.ctxt)
+{
+  # Save configuration files with model export directory
+  ok <- 1
+  if (!file.exists(file.path(rf.ctxt$working.dir,"configuration"))) {
+    ok <- dir.create(file.path(rf.ctxt$working.dir,"configuration"))
+  }
+  if (ok) {
+    ok <- file.copy(from = opt$data_conf, to = file.path(rf.ctxt$working.dir,"configuration"))
+  }
+  if (ok) {
+    ok <- file.copy(from = opt$model_conf, to = file.path(rf.ctxt$working.dir,"configuration"))
+  }
+  if ("col.skip.fname" %in% names(conf) && ok) {
+    ok <- file.copy(from = conf$col.skip.fname, to = file.path(rf.ctxt$working.dir,"configuration"))
+  }
+  if ("col.types.fname" %in% names(conf) && ok) {
+    ok <- file.copy(from = conf$col.types.fname, to = file.path(rf.ctxt$working.dir,"configuration"))
+  }
+  if (ok == 0) {
+    error(logger, "CopyConfigFiles: couldn't copy files")
+  }    
+}
+
 ##############
 ## Main
 #
@@ -263,7 +292,7 @@ if (conf$data.source.type == "db") {
   close(ch)
 } else if (conf$data.source.type == "csv") {
   data <- read.csv(file.path(conf$csv.path, conf$csv.fname),
-                   na.strings = "", check.names = FALSE)
+                   na.strings = "", check.names = FALSE, sep=conf$csv.sep)
 } else if (conf$data.source.type == "rdata") {
   envir <- new.env()
   load(file.path(conf$rdata.path, conf$rdata.fname), envir = envir)
@@ -294,6 +323,9 @@ RF_WORKING_DIR <- rf.ctxt$working.dir
 
 # Fit (and export) model
 train.out <- TrainModel(data, conf, rf.ctxt)
+
+# Save configuration files with model
+CopyConfigFiles(conf, rf.ctxt)
 
 # Generate HTML report
 if ("html.fname" %in% names(conf)) {
