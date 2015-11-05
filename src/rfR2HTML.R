@@ -99,8 +99,10 @@ WriteHTML <- function(conf, model.path, out.path = model.path, rfmod.stats = NUL
     plot(perf, colorize=T, main="")
     lines(x=c(0, 1), y=c(0,1))
     dev.off()
-    HTMLInsertGraph(plot.fname, Caption="Training ROC curve", WidthHTML=kPlotWidth, HeightHTML=kPlotHeight)
-  } else {
+    auc.value <- unlist(slot(performance(pred,"auc"), "y.values"))
+    HTMLInsertGraph(plot.fname, Caption=sprintf("Training ROC curve. AUC:%.4f\n", auc.value), WidthHTML=kPlotWidth, HeightHTML=kPlotHeight)
+    info(logger, sprintf("AUC:%.4f", auc.value))
+} else {
     # "regression" mode... create data-frame with simple AAE meassure
     re.train.error <- sum(abs(y.hat - y))/length(y)
     med.train.error <- sum(abs(y - median(y)))/length(y)
