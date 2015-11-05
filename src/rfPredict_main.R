@@ -47,6 +47,11 @@ ValidateConfigArgs <- function(conf)
               "db.type" %in% names(conf) && "db.tbl.name" %in% names(conf))
   } else if (conf$data.source.type == "csv") {
     stopifnot("csv.path" %in% names(conf) && "csv.fname" %in% names(conf))
+    if ("csv.sep" %in% names(conf)) {
+      conf$csv.sep <- as.character(conf$csv.sep)
+    } else {
+      conf$csv.sep <- ","
+    }
   } else {  # rdata
     stopifnot(c("rdata.path", "rdata.fname") %in% names(conf))
   }
@@ -197,7 +202,7 @@ if (isTRUE(conf$graph.dev == "Bitmap")) {
 if (conf$data.source.type == "db") {
   error(logger, paste("rfPredict_main.R: not yet implemented data source type ", conf$data.source.type))
 } else if (conf$data.source.type == "csv") {
-  data <- read.csv(file.path(conf$csv.path, conf$csv.fname), na.strings = "")
+  data <- read.csv(file.path(conf$csv.path, conf$csv.fname), na.strings = "", sep=conf$csv.sep)
 } else if (conf$data.source.type == "rdata") {
   envir <- new.env()
   load(file.path(conf$rdata.path, conf$rdata.fname), envir = envir)
@@ -229,6 +234,8 @@ rf.mode <- ifelse(length(unique(mod$y)) == 2, "class", "regress")
 
 # Extract columns used to build model
 ok <- 1
+print(colnames(mod$x))
+print(colnames(data))
 tryCatch(x.test <- data[,colnames(mod$x)], error = function(err){ok <<- 0})
 if (ok == 0) {
   error(logger, "rfPredict_main.R: train/test column mismatch")
@@ -284,6 +291,39 @@ if ("col.y" %in% names(conf)) {
     plot(perf, colorize=T, main="")
     lines(x=c(0, 1), y=c(0,1))
     dev.off()
+
+    # Generate LIFT plot
+    perf <- performance(pred,"lift","rpp")
+    plot.fname <- "LIFT.png"
+    png(file = file.path(conf$out.path, plot.fname), width=kPlotWidth, height=kPlotHeight)
+    plot(perf, main="Lift curve", colorize=T)
+    lines(x=c(0, 1), y=c(1,1))
+    dev.off()
+    
+    # Generate Cumulative Gains plot
+    perf <- performance(pred,"tpr","rpp")
+    plot.fname <- "Gains.png"
+    png(file = file.path(conf$out.path, plot.fname), width=kPlotWidth, height=kPlotHeight)
+    plot(perf, main="Cumulative Gains curve", colorize=T)
+    lines(x=c(0, 1), y=c(0,1))
+    dev.off()
+
+    ## Score histogram colored by y
+    library(ggplot2)
+    plot.fname = "score_hist1.png"
+    hist.yresult <- data.frame(x = y.hat, category = factor(y))
+    p <- ggplot(hist.yresult, aes(x, colour = category))
+    p <- p + geom_freqpoly()
+    p <- p + xlab('predicted score colored by true category')
+    ggsave(file.path(conf$out.path, plot.fname), width = kPlotWidth/100, height = kPlotHeight/100, units = "in")
+
+    ## Score histogram (stacked)
+    library(ggplot2)
+    plot.fname = "score_hist2.png"
+    p <- ggplot(hist.yresult, aes(x, fill = category))
+    p <- p + geom_bar(position = "fill") + stat_bin(binwidth=0.1)
+    p <- p + xlab('predicted score colored by true category') + ylab('percentage') 
+    ggsave(file.path(conf$out.path, plot.fname), width = kPlotWidth/100, height = kPlotHeight/100, units = "in")
   } else {
     re.test.error <- sum(abs(y.hat - y))/nrow(x.test)
     med.test.error <- sum(abs(y - median(y)))/nrow(x.test)
