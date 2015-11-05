@@ -6,7 +6,8 @@
 | data.source.type | can be **db** (database) or **csv** (comma-separated values file) or **rdata** (RData file save()'d by R) |
 | ## ...CSV spec| |
 |csv.path |  specifies the location of the cdv file, when the data source type is **csv**|
-| csv.fname|  csv file name|
+| csv.fname |  csv file name|
+| csv.sep | the field separator character (optional) |
 | ## ...RData spec| |
 | rdata.path| specifies the location of the RData file, when the data source type is **rdata**|
 | rdata.fname| RData file name|
