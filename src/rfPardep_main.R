@@ -277,9 +277,10 @@ PlotSinglePDep <- function(var, x, max.var.vals=40, sample.size=500, qntl=0.025,
       ymax <- max(var.vals.bp$stats)
       plot(c(min(pdep$var.vals), max(pdep$var.vals)), c(0,0), ylim=c(ymin, ymax), xlab=var, ylab='Partial dependence', 
            type='l', lty=3, col='white')
-      matlines(pdep$var.vals, t(var.vals.bp$stats), lty=c(3,2,1,2,3), col=c('black','black','red','black','black'))
+      matlines(pdep$var.vals, t(var.vals.bp$stats), lty=c(3,2,1,2,3), col=c('black','black','white','black','black'))
+      lines(pdep$var.vals, pdep$par.dep, type='l', col='red')
       if (show.yhat.mean) {
-        lines(c(0, max(pdep$var.vals)), c(mean.y.hat, mean.y.hat), col='blue', lty=3)
+        lines(c(min(pdep$var.vals), max(pdep$var.vals)), c(mean.y.hat, mean.y.hat), col='blue', lty=3)
       }
     } else {
       ymin <- min(pdep$par.dep)
@@ -456,7 +457,7 @@ PlotPairPDep <- function(var1, var2, x, max.var.vals=40, sample.size=500, qntl=0
   title(main)
 }
 
-PairInteract <- function(var1, var2, x, var1.levels=NULL, var2.levels=NULL)
+PairInteract <- function(var1, var2, x, var1.levels=NULL, var2.levels=NULL, seed=135711)
 {
   # Computes two-variable interaction strength.
   #
@@ -464,20 +465,21 @@ PairInteract <- function(var1, var2, x, var1.levels=NULL, var2.levels=NULL)
   #    var1: variable identifier for the first variable to be plotted
   #    var2: variable identifier for the second variable to be plotted
   #       x: training data
+  #    seed: random number seed (for sampling from x)
 
   ## Compute the single and pair (centered) partial dependences
   ## X1
-  set.seed(1357)
+  set.seed(seed)
   pdep.var1 <- ComputeSinglePDep(var1, x, var.levels = var1.levels)
   pdep.var1$par.dep <- pdep.var1$par.dep - mean(pdep.var1$par.dep)
   num.var1.vals <- length(pdep.var1$var.vals)
   ## X2
-  set.seed(1357)
+  set.seed(seed)
   pdep.var2 <- ComputeSinglePDep(var2, x, var.levels = var2.levels)
   pdep.var2$par.dep <- pdep.var2$par.dep - mean(pdep.var2$par.dep)
   num.var2.vals <- length(pdep.var2$var.vals)
   ## X1, X2
-  set.seed(1357)
+  set.seed(seed)
   pdep.var1.var2 <- ComputePairPDep(var1, var2, x, var1.levels = var1.levels, var2.levels = var2.levels)
   pdep.var1.var2$par.dep <- pdep.var1.var2$par.dep - mean(pdep.var1.var2$par.dep)
   
@@ -532,7 +534,7 @@ PairInteract2 <- function(var1, var2, x, var1.levels=NULL, var2.levels=NULL)
   return(accum.num / accum.den)
 }
 
-PlotPairInteract <- function(var1, vars2, x, var1.levels=NULL, vars2.levels=NULL)
+PlotPairInteract <- function(var1, vars2, x, var1.levels=NULL, vars2.levels=NULL, seed=135711)
 {
   # Generates plot of two-variable interaction strengths of given variable with selected 
   # other variables.
@@ -550,10 +552,10 @@ PlotPairInteract <- function(var1, vars2, x, var1.levels=NULL, vars2.levels=NULL
     } else {
       var2.levels <- NULL
     }
-    two.var.int[iVar2] <- PairInteract(var1, vars2[iVar2], x, var1.levels, var2.levels)
+    two.var.int[iVar2] <- PairInteract(var1, vars2[iVar2], x, var1.levels, var2.levels, seed)
   }
   names(two.var.int) <- vars2
-  barplot(x1.all, ylab  = paste0("Interaction strength with ", var1), names = vars2, cex.names = 0.75)
+  barplot(two.var.int, ylab  = paste0("Interaction strength with ", var1), names = vars2, cex.names = 0.75)
   return(two.var.int)
 }
 
