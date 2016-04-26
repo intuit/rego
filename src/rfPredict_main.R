@@ -202,7 +202,7 @@ if (isTRUE(conf$graph.dev == "Bitmap")) {
 if (conf$data.source.type == "db") {
   error(logger, paste("rfPredict_main.R: not yet implemented data source type ", conf$data.source.type))
 } else if (conf$data.source.type == "csv") {
-  data <- read.csv(file.path(conf$csv.path, conf$csv.fname), na.strings = "", sep=conf$csv.sep)
+  data <- read.csv(file.path(conf$csv.path, conf$csv.fname), na.strings = "", sep=conf$csv.sep, check.names = FALSE)
 } else if (conf$data.source.type == "rdata") {
   envir <- new.env()
   load(file.path(conf$rdata.path, conf$rdata.fname), envir = envir)
@@ -234,8 +234,6 @@ rf.mode <- ifelse(length(unique(mod$y)) == 2, "class", "regress")
 
 # Extract columns used to build model
 ok <- 1
-print(colnames(mod$x))
-print(colnames(data))
 tryCatch(x.test <- data[,colnames(mod$x)], error = function(err){ok <<- 0})
 if (ok == 0) {
   error(logger, "rfPredict_main.R: train/test column mismatch")
