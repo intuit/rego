@@ -198,9 +198,9 @@ ReadTrimQuantiles <- function(in.fname)
   return(trims.df)
 }
 
-WriteObsIdYhat <- function(out.path, obs.id, y, y.hat, file.name = "id_y_yHat.csv")
+WriteObsIdYhat <- function(out.path, obs.id, y, y.hat, field.sep = ",", file.name = "id_y_yHat.csv")
 {
-  # Writes out tuples <id, y, yHat> to a CSV file. Useful for loading score into a db.
+  # Writes out tuples <id, y, yHat> to a text file. Useful for loading score into a db.
   #
   # Args:
   #    out.path : where output file will be written
@@ -214,7 +214,7 @@ WriteObsIdYhat <- function(out.path, obs.id, y, y.hat, file.name = "id_y_yHat.cs
   stopifnot(length(y) == length(obs.id))
   
   out.df <- data.frame(cbind(obs.id, y, y.hat))
-  write.csv(out.df, file = file.path(out.path, file.name), row.names = F, quote = F, na ="") 
+  write.table(out.df, file = file.path(out.path, file.name), row.names = F, quote = F, na ="", sep = field.sep) 
 }
 
 ExportModel <- function(rfmod, rfmod.path, x, y, wt, y.hat, out.path, x.df, col.types, winz=0.025, x.recoded.cat.vars=NULL)
