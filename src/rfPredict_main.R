@@ -72,11 +72,30 @@ ValidateConfigArgs <- function(conf)
     conf$log.level <- get(conf$log.level)
   }
   
-  ## Did user specified an output file?
+  ## Did user specified an output file name?
   if (is.null(conf$out.fname)) {
     conf$out.fname <- "rfPredict_out.csv"
   }
-
+  ## ... field separator?
+  if (is.null(conf$out.sep)) {
+    conf$out.sep <- ","
+  } else if (nchar(conf$out.sep) == 2 && (conf$out.sep == paste("\\", "t", sep=""))) {
+    conf$out.sep <- "\t"
+  }
+  
+  ## Generate plots? 
+  if (is.null(conf$graph.plots.ROC)) {
+    conf$graph.plots.ROC <- TRUE
+  } else {
+    conf$graph.plots.ROC <- (as.numeric(conf$graph.plots.ROC) == 1)
+  }
+  ## ... LIFT, Gain, etc. plots?
+  if (is.null(conf$graph.plots.extra)) {
+    conf$graph.plots.extra <- FALSE
+  } else {
+    conf$graph.plots.extra <- (as.numeric(conf$graph.plots.extra) == 1)
+  }
+  
   return(conf)
 }
 
@@ -121,7 +140,7 @@ ValidateCmdArgs <- function(opt, args.m)
   return(conf)
 }
 
-CheckFactorsEncoding  <- function(x.test, x.train.levels, x.train.levels.lowcount = NA)
+CheckFactorsEncoding  <- function(x.test, x.train.levels, x.train.levels.lowcount=NULL)
 {
   # Check that the integer codes given to factors in x.test are the same as the ordering
   # used when the model was built. Otherwise, when the RuleFit::rfpred() function casts  
@@ -141,7 +160,7 @@ CheckFactorsEncoding  <- function(x.test, x.train.levels, x.train.levels.lowcoun
       factor.vals <- as.character(x.test[, factor.name])
       
       # Were there low-count levels at train time? If so, replace them in x.test too
-      if (!is.na(x.train.levels.lowcount)) {
+      if (!is.null(x.train.levels.lowcount)) {
         i.recoded.var <- grep(paste("^", factor.name, "$", sep=""), x.train.levels.lowcount$var, perl=T)
         if (length(i.recoded.var) > 0) {
           warn(logger, paste("CheckFactorsEncoding: replacing low-count levels for '", factor.name))
@@ -280,48 +299,52 @@ if ("col.y" %in% names(conf)) {
     info(logger, paste("Area under the ROC curve:", as.numeric(perf@y.values)))
 
     # Generate ROC plot
-    kPlotWidth <- 620
-    kPlotHeight <- 480
-    plot.fname <- "ROC.png"
-    pred <- prediction(y.hat, y)
-    perf <- performance(pred, "tpr", "fpr")
-    png(file = file.path(conf$out.path, plot.fname), width=kPlotWidth, height=kPlotHeight)
-    plot(perf, colorize=T, main="")
-    lines(x=c(0, 1), y=c(0,1))
-    dev.off()
-
-    # Generate LIFT plot
-    perf <- performance(pred,"lift","rpp")
-    plot.fname <- "LIFT.png"
-    png(file = file.path(conf$out.path, plot.fname), width=kPlotWidth, height=kPlotHeight)
-    plot(perf, main="Lift curve", colorize=T)
-    lines(x=c(0, 1), y=c(1,1))
-    dev.off()
+    if (conf$graph.plots.ROC) {
+      kPlotWidth <- 620
+      kPlotHeight <- 480
+      plot.fname <- "ROC.png"
+      pred <- prediction(y.hat, y)
+      perf <- performance(pred, "tpr", "fpr")
+      png(file = file.path(conf$out.path, plot.fname), width=kPlotWidth, height=kPlotHeight)
+      plot(perf, colorize=T, main="")
+      lines(x=c(0, 1), y=c(0,1))
+      dev.off()
+    }
+    # Generate extra plots
+    if (conf$graph.plots.extra) { 
+      # Generate LIFT plot
+      perf <- performance(pred,"lift","rpp")
+      plot.fname <- "LIFT.png"
+      png(file = file.path(conf$out.path, plot.fname), width=kPlotWidth, height=kPlotHeight)
+      plot(perf, main="Lift curve", colorize=T)
+      lines(x=c(0, 1), y=c(1,1))
+      dev.off()
     
-    # Generate Cumulative Gains plot
-    perf <- performance(pred,"tpr","rpp")
-    plot.fname <- "Gains.png"
-    png(file = file.path(conf$out.path, plot.fname), width=kPlotWidth, height=kPlotHeight)
-    plot(perf, main="Cumulative Gains curve", colorize=T)
-    lines(x=c(0, 1), y=c(0,1))
-    dev.off()
+      # Generate Cumulative Gains plot
+      perf <- performance(pred,"tpr","rpp")
+      plot.fname <- "Gains.png"
+      png(file = file.path(conf$out.path, plot.fname), width=kPlotWidth, height=kPlotHeight)
+      plot(perf, main="Cumulative Gains curve", colorize=T)
+      lines(x=c(0, 1), y=c(0,1))
+      dev.off()
 
-    ## Score histogram colored by y
-    library(ggplot2)
-    plot.fname = "score_hist1.png"
-    hist.yresult <- data.frame(x = y.hat, category = factor(y))
-    p <- ggplot(hist.yresult, aes(x, colour = category))
-    p <- p + geom_freqpoly()
-    p <- p + xlab('predicted score colored by true category')
-    ggsave(file.path(conf$out.path, plot.fname), width = kPlotWidth/100, height = kPlotHeight/100, units = "in")
+      # Score histogram colored by y
+      library(ggplot2)
+      plot.fname = "score_hist1.png"
+      hist.yresult <- data.frame(x = y.hat, category = factor(y))
+      p <- ggplot(hist.yresult, aes(x, colour = category))
+      p <- p + geom_freqpoly()
+      p <- p + xlab('predicted score colored by true category')
+      ggsave(file.path(conf$out.path, plot.fname), width = kPlotWidth/100, height = kPlotHeight/100, units = "in")
 
-    ## Score histogram (stacked)
-    library(ggplot2)
-    plot.fname = "score_hist2.png"
-    p <- ggplot(hist.yresult, aes(x, fill = category))
-    p <- p + geom_bar(position = "fill") + stat_bin(binwidth=0.1)
-    p <- p + xlab('predicted score colored by true category') + ylab('percentage') 
-    ggsave(file.path(conf$out.path, plot.fname), width = kPlotWidth/100, height = kPlotHeight/100, units = "in")
+      # Score histogram (stacked)
+      library(ggplot2)
+      plot.fname = "score_hist2.png"
+      p <- ggplot(hist.yresult, aes(x, fill = category))
+      p <- p + geom_bar(position = "fill") + stat_bin(binwidth=0.1)
+      p <- p + xlab('predicted score colored by true category') + ylab('percentage')
+      ggsave(file.path(conf$out.path, plot.fname), width = kPlotWidth/100, height = kPlotHeight/100, units = "in")
+    }
   } else {
     re.test.error <- sum(abs(y.hat - y))/nrow(x.test)
     med.test.error <- sum(abs(y - median(y)))/nrow(x.test)
@@ -346,6 +369,6 @@ if ("col.id" %in% names(conf)) {
 } else {
   obs.id <- rep(NA, nrow(data))
 }
-WriteObsIdYhat(out.path = conf$out.path, obs.id = obs.id, y = y, y.hat = y.hat, file.name = conf$out.fname)
+WriteObsIdYhat(out.path = conf$out.path, obs.id = obs.id, y = y, y.hat = y.hat, field.sep = conf$out.sep, file.name = conf$out.fname)
 
 q(status=0)
