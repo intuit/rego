@@ -1475,4 +1475,10 @@ runstats=function(rfmod) {
    else { it=rfmod[[1]]}
    list(cri=as.numeric(it[11]),err=as.numeric(it[12]),terms=as.numeric(it[13]))
 }
-
+getintercept=function() {
+  # Returns the intercept of the RuleFit model in the working directory.
+  zz <- file(file.path(GetRF_WORKING_DIR(), 'rulefit.mod'), 'rb')
+  c0 <- readBin(zz, numeric(), size=8, n=5)[5]
+  close(zz)
+  return(c0)
+}
