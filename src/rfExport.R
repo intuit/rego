@@ -271,9 +271,12 @@ ExportModel <- function(rfmod, rfmod.path, x, y, wt, y.hat, out.path, x.df, col.
   
   GetIntercept <- function(rfmod.path) {
     # Returns the intercept of the RuleFit model in the given directory.
-    zz <- file(file.path(rfmod.path, 'rulefit.mod'), 'rb')
-    c0 <- readBin(zz, numeric(), size=8, n=5)[5]
-    close(zz)
+    if (GetRF_WORKING_DIR() == rfmod.path) {
+      c0 <- getintercept()
+    } else {
+      warn(logger, paste("GetIntercept: Failed to retrieve intercept from: ", rfmod.path))
+      c0 <- NA
+    }
     return(c0)
   }
 
