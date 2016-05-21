@@ -1,4 +1,4 @@
-#!/usr/bin/Rscript
+#!/usr/local/bin/Rscript
 
 ###############################################################################
 # FILE: rfPardep_main.R

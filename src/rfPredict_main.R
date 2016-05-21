@@ -1,4 +1,4 @@
-#!/usr/bin/Rscript
+#!/usr/local/bin/Rscript
 
 ###############################################################################
 # FILE: rfPredict_main.R
