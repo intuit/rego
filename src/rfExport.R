@@ -251,21 +251,13 @@ ExportModel <- function(rfmod, rfmod.path, x, y, wt, y.hat, out.path, x.df, col.
   stopifnot(length(col.types) >= ncol(x.df))
 
   GetRules <- function(rfmod.path) {
-    # A simplified version of RuleFit's rules() function to retrieve
-    # the model rules as text strings.
-    mod.stats <- scan(file.path(rfmod.path, 'rfout'), what='',quiet=T)
-    if (!"terms" %in% mod.stats) {
-      error(logger, "GetRules: can't find #terms in 'rfout'")
+    # Returns the RuleFit model rules in the given directory as text strings.
+    if (GetRF_WORKING_DIR() == rfmod.path) {
+      ruleList <- getrules()
+    } else {
+      warn(logger, paste("GetRules: Failed to retrieve rules from: ", rfmod.path))
+      ruleList <- NA
     }
-    n.rules <- as.numeric(mod.stats[13])
-    zz <- file(file.path(rfmod.path, 'intrules'), 'wb')
-    writeBin(as.integer(c(0, 1, n.rules)), zz, size=4); close(zz)
-    wd <- getwd(); setwd(rfmod.path)
-    status <- rfexe('rules')
-    if (status != 'OK') { rfstat(); stop()}
-    ruleList <- readLines('rulesout.hlp')
-    unlink('rulesout.hlp')
-    setwd(wd)
     return(ruleList)
   }
   
