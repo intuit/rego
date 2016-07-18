@@ -1,5 +1,5 @@
 source(file.path(REGO_HOME, "/src/logger.R"))
-source(file.path(REGO_HOME, "/lib/RuleFit/rulefit.r"))
+source(file.path(REGO_HOME, "/lib/RuleFit", ifelse(nchar(Sys.getenv("RF_API")) > 0, Sys.getenv("RF_API"), "rulefit.r")))
 
 DefaultRFContext <- function()
 {
