@@ -1482,3 +1482,20 @@ getintercept=function() {
   close(zz)
   return(c0)
 }
+getrules=function() {
+  # A simplified version of rules() to retrieve the model rules as text strings.
+  mod.stats <- scan(file.path(GetRF_WORKING_DIR(), 'rfout'), what='',quiet=T)
+  if (!"terms" %in% mod.stats) {
+    return(NA)
+  }
+  n.rules <- as.numeric(mod.stats[13])
+  zz <- file(file.path(GetRF_WORKING_DIR(), 'intrules'), 'wb')
+  writeBin(as.integer(c(0, 1, n.rules)), zz, size=4); close(zz)
+  wd <- getwd(); setwd(GetRF_WORKING_DIR())
+  status <- rfexe('rules')
+  if (status != 'OK') {rfstat(); stop()}
+  ruleList <- readLines('rulesout.hlp')
+  unlink('rulesout.hlp')
+  setwd(wd)
+  return(ruleList)
+}
