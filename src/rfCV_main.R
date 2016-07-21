@@ -24,7 +24,7 @@ source(file.path(REGO_HOME, "/src/logger.R"))
 source(file.path(REGO_HOME, "/src/rfExport.R"))
 source(file.path(REGO_HOME, "/src/rfTrain.R"))
 source(file.path(REGO_HOME, "/src/rfGraphics.R"))
-source(file.path(REGO_HOME, "/lib/RuleFit/rulefit.r"))
+source(file.path(REGO_HOME, "/lib/RuleFit", ifelse(nchar(Sys.getenv("RF_API")) > 0, Sys.getenv("RF_API"), "rulefit.r")))
 library(ROCR, verbose = FALSE, quietly=TRUE, warn.conflicts = FALSE)
 library(getopt)
 
