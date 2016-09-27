@@ -171,7 +171,10 @@ InitRFContext <- function(model.conf.fname, data.conf)
     rf.ctxt$mod.sel <- 1
   } else if (conf$score.criterion == "AAE" & conf$task == "regression") {
     rf.ctxt$mod.sel <- 1    
-  } else if (conf$score.criterion == "LS") {
+  } else if (conf$score.criterion == "LS" & conf$task == "regression") {
+    rf.ctxt$mod.sel <- 2
+  } else if (conf$score.criterion == "LS" & conf$task == "classification") {
+    # average squared-error loss on predicted probabilities
     rf.ctxt$mod.sel <- 2
   } else if (conf$score.criterion == "Misclassification" & conf$task == "classification") {
     rf.ctxt$mod.sel <- 3
