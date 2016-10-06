@@ -61,7 +61,7 @@ PruneFeatures <- function(x, na.thresh = 0.95, col.skip.fname = "")
   if (nchar(col.skip.fname) > 0) {
     if (file.exists(col.skip.fname)) {
       colNum2Remove.3 <- vector()
-      feat2skip <- read.table(col.skip.fname, sep = ",", header = F, as.is = T)[,1]
+      feat2skip <- read.table(col.skip.fname, sep = ",", header = F, col.names = c("var.name"), as.is = T)[,1]
       for (cname in feat2skip) {
         iCol <- grep(paste("^", cname, "$", sep=""), colnames(x), perl=T, ignore.case=T)
         if ( length(iCol == 1) ) {
