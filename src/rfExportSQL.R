@@ -147,7 +147,7 @@ ConvertTermsToSQL <- function(terms, db.type, x.levels.fname = "", x.levels.lowc
   {
     # Transforms splits of the form 'x IN ('v1', 'v2', NA, ...)' into sql clause
     # '(x IS NULL OR x IN ('v1', 'v2', ...))' and split 'x NOT IN ('v1', 'v2', NA, ...)' 
-    # into sql clause '(x IS NOT NULL AND x NOT IN ('v1', 'v2', ...))'
+    # into sql clause 'x IS NOT NULL AND x NOT IN ('v1', 'v2', ...)'
     stopifnot(grepl(" AND ", split.str) == FALSE)
     stopifnot(grepl(' IN \\( ', split.str))
     
@@ -171,11 +171,19 @@ ConvertTermsToSQL <- function(terms, db.type, x.levels.fname = "", x.levels.lowc
     if (grepl('NA,', split.str)) {
       # NA at start, or middle, of value list
       split.str <- gsub('NA,', "", split.str)
-      split.str <- paste("(", isNullStr, ifelse(split.op.is.NOT, " AND ", " OR "), split.str, ")", sep = "")
+      if (split.op.is.NOT) {
+        split.str <- paste(isNullStr, " AND ", split.str, sep = "")
+      } else {
+        split.str <- paste("(", isNullStr, " OR ", split.str, ")", sep = "")
+      }
     } else if (grepl(',NA', split.str)) {
       # NA at end of value list
       split.str <- gsub(',NA', "", split.str)
-      split.str <- paste("(", isNullStr, ifelse(split.op.is.NOT, " AND ", " OR "), split.str, ")", sep = "")
+      if (split.op.is.NOT) {
+        split.str <- paste(isNullStr, " AND ", split.str, sep = "")
+      } else {
+        split.str <- paste("(", isNullStr, " OR ", split.str, ")", sep = "")
+      }        
     } else if (grepl('\\( NA \\)', split.str)) {
       # NA is only element of value list
       split.str <- isNullStr
