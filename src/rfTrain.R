@@ -144,7 +144,11 @@ TrainModel <- function(data, config, rf.ctxt)
 
   # Coerce to numeric matrix & mark NAs
   x <- data.matrix(xDF)
-  x[is.na(x)] <- 9.0e30
+  if ("data.NA.value" %in% names(conf)) {
+    x[x == conf$data.NA.value] <- 9.0e30
+  } else {
+    x[is.na(x)] <- 9.0e30
+  }
 
   # Save workspace (before training - mostly for debugging purposes)?
   if (config$save.workspace) {
