@@ -176,7 +176,7 @@ rulefit=function (x,y,wt=rep(1,n),cat.vars=NULL,not.used=NULL,
    zz=file(paste(GetRF_WORKING_DIR(),'/lx',sep=''),'wb')                                
    writeBin(as.integer(lx),zz,size=8); close(zz)                            
    zz=file(paste(GetRF_WORKING_DIR(),'/train.x',sep=''),'wb')
-   writeBin(as.double(as.vector(xx)),zz,size=8); close(zz)  
+   WriteBinaryVector(as.double(as.vector(xx)),zz); close(zz)  
    zz=file(paste(GetRF_WORKING_DIR(),'/train.y',sep=''),'wb')                              
    writeBin(as.double(yy),zz,size=8); close(zz)                             
    zz=file(paste(GetRF_WORKING_DIR(),'/train.w',sep=''),'wb')
@@ -210,7 +210,7 @@ rfpred=function (x) {
       xx[is.na(xx)] <- xmiss;
    }                                                                           
    zz=file(paste(GetRF_WORKING_DIR(),'/test.x',sep=''),'wb')
-   writeBin(as.numeric(c(n,as.vector(xx))),zz,size=8); close(zz)
+   WriteBinaryVector(as.double(as.vector(xx)),zz); close(zz)
    wd=getwd(); setwd(GetRF_WORKING_DIR())
    status=rfexe('rulefit_pred')
    setwd(wd)
@@ -1498,4 +1498,26 @@ getrules=function() {
   unlink('rulesout.hlp')
   setwd(wd)
   return(ruleList)
+}
+WriteBinaryVector <- function(x, con) {
+  # Utility wraper around writeBin to avoid the "Only $2^31 - 1$ bytes can be written in a single call"
+  # limitation.
+  max.writeBin.bytes <- 2^31-500
+  if (!is.vector(x)) {
+    stop("can only write vector objects")
+  }
+  if (!isOpen(con)) {
+    stop("need an open connection")
+  }
+  x.elem.size <- as.numeric(object.size(x)) / length(x)
+  max.writeBin.x.elems <- floor(max.writeBin.bytes / x.elem.size)
+  i.from <- 1
+  i.to <- min(max.writeBin.x.elems, length(x))
+  info(logger, "Using WriteBinaryVector")
+  while (i.from < length(x)) {
+    writeBin(x[i.from:i.to], con, size=8)
+    info(logger, ".")  
+    i.from <- i.to + 1
+    i.to <- min(i.from + max.writeBin.x.elems - 1, length(x))
+  }
 }
