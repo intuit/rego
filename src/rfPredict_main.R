@@ -370,5 +370,6 @@ if ("col.id" %in% names(conf)) {
   obs.id <- rep(NA, nrow(data))
 }
 WriteObsIdYhat(out.path = conf$out.path, obs.id = obs.id, y = y, y.hat = y.hat, field.sep = conf$out.sep, file.name = conf$out.fname)
+info(logger, "Done!")
 
 q(status=0)
