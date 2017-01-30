@@ -210,7 +210,7 @@ rfpred=function (x) {
       xx[is.na(xx)] <- xmiss;
    }                                                                           
    zz=file(paste(GetRF_WORKING_DIR(),'/test.x',sep=''),'wb')
-   WriteBinaryVector(as.double(as.vector(xx)),zz); close(zz)
+   WriteBinaryVector(as.double(c(n, as.vector(xx))),zz); close(zz)
    wd=getwd(); setwd(GetRF_WORKING_DIR())
    status=rfexe('rulefit_pred')
    setwd(wd)
